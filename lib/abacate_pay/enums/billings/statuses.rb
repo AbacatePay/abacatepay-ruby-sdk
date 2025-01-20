@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Enums
-    module Billing
+    module Billings
       # Enumeration defining billing statuses.
       #
       # This enumeration is used to represent the various statuses that a billing process can have.

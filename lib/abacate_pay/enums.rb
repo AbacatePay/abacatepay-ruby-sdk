@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "abacate_pay/enums/billing/frequencies"
-require "abacate_pay/enums/billing/methods"
-require "abacate_pay/enums/billing/statuses"
+require "abacate_pay/enums/billings/frequencies"
+require "abacate_pay/enums/billings/methods"
+require "abacate_pay/enums/billings/statuses"
 
 module AbacatePay
   # The Enums module contains all enumeration classes used

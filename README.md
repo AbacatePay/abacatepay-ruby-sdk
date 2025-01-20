@@ -56,11 +56,11 @@ To create a billing, use the following code:
 
 ```ruby
 billing_client.create(
-  AbacatePay::Resources::Billing.new(
-    frequency: AbacatePay::Enums::Billing::Frequencies::ONE_TIME,
-    methods: [AbacatePay::Enums::Billing::Methods::PIX],
+  AbacatePay::Resources::Billings.new(
+    frequency: AbacatePay::Enums::Billings::Frequencies::ONE_TIME,
+    methods: [AbacatePay::Enums::Billings::Methods::PIX],
     products: [
-      AbacatePay::Resources::Billing::Product.new(
+      AbacatePay::Resources::Billings::Product.new(
         external_id: 'abc_123',
         name: 'Product A',
         description: 'Description of product A',
@@ -68,12 +68,12 @@ billing_client.create(
         price: 100 # Price in cents
       )
     ],
-    metadata: AbacatePay::Resources::Billing::Metadata.new(
+    metadata: AbacatePay::Resources::Billings::Metadata.new(
       return_url: 'https://www.abacatepay.com',
       completion_url: 'https://www.abacatepay.com'
     ),
-    customer: AbacatePay::Resources::Customer.new(
-      metadata: AbacatePay::Resources::Customer::Metadata.new(
+    customer: AbacatePay::Resources::Customers.new(
+      metadata: AbacatePay::Resources::Customers::Metadata.new(
         name: 'Abacate Lover',
         cellphone: '01912341234',
         email: 'lover@abacate.com',
@@ -87,7 +87,7 @@ billing_client.create(
 Alternatively, you can use a previously created customer by specifying their ID:
 
 ```ruby
-AbacatePay::Resources::Customer.new(
+AbacatePay::Resources::Customers.new(
   id: 'cust_DEbpqcN...'
 )
 ```
@@ -114,7 +114,7 @@ To create a customer, use the following code:
 
 ```ruby
 customer_client.create(
-  AbacatePay::Resources::Customer.new(
+  AbacatePay::Resources::Customers.new(
     metadata: AbacatePay::Resources::Customer::Metadata.new(
       name: 'Abacate Lover',
       cellphone: '01912341234',

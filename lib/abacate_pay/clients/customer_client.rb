@@ -17,7 +17,7 @@ module AbacatePay
       # @return [Array<Resources::Customer>] Array of Customer objects
       def list
         response = request("GET", "list")
-        response.map { |data| Resources::Customer.new(data) }
+        response.map { |data| Resources::Customers.new(data) }
       end
 
       # Creates a new customer
@@ -32,7 +32,7 @@ module AbacatePay
           taxId: data.metadata&.tax_id
         })
 
-        Resources::Customer.new(response)
+        Resources::Customers.new(response)
       end
     end
   end

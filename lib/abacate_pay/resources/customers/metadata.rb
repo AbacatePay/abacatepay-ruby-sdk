@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Resources
-    module Customer
+    module Customers
       # Represents metadata for a customer in the AbacatePay system.
       #
       # This class contains additional information about a customer, such as their name,

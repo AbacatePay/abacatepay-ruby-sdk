@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Enums
-    module Billing
+    module Billings
       # Enumeration defining billing methods.
       #
       # This enumeration is used to represent different payment methods available for billing.

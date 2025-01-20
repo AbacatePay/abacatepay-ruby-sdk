@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "abacate_pay/resources/resource"
-require "abacate_pay/resources/billing"
-require "abacate_pay/resources/customer"
-require "abacate_pay/resources/billing/metadata"
-require "abacate_pay/resources/billing/product"
-require "abacate_pay/resources/customer/metadata"
+require "abacate_pay/resources/billings"
+require "abacate_pay/resources/customers"
+require "abacate_pay/resources/billings/metadata"
+require "abacate_pay/resources/billings/product"
+require "abacate_pay/resources/customers/metadata"
 
 module AbacatePay
   # The Resources module contains all resource classes that

@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Enums
-    module Billing
+    module Billings
       # Enumeration defining billing frequencies.
       #
       # This enumeration is used to categorize different payment or billing frequencies.

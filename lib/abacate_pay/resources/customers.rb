@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "abacate_pay/resources/customer/metadata"
+require "abacate_pay/resources/customers/metadata"
 
 module AbacatePay
   module Resources
@@ -8,10 +8,10 @@ module AbacatePay
     #
     # This class handles customer data including identification and metadata,
     # providing a structured way to manage customer information within the system.
-    class Customer < Resource
+    class Customers < Resource
       # Maps property names to their corresponding resource classes
       RESOURCE_PROPERTIES = {
-        metadata: 'AbacatePay::Resources::Customer::Metadata'
+        metadata: 'AbacatePay::Resources::Customers::Metadata'
       }.freeze
 
       # @return [String, nil] The unique identifier for the customer
