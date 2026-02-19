@@ -30,4 +30,4 @@ jobs:
           echo ":rubygems_api_key: ${RUBYGEMS_API_KEY}" >> $HOME/.gem/credentials
           rm -f *.gem
           gem build *.gemspec
-          gem push *.gem
+          gem push "$(ls -1 *.gem | head -1)"
