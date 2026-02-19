@@ -17,7 +17,7 @@ module AbacatePay
       # @return [Array<Resources::Billing>] Array of Billing objects
       def list
         response = request("GET", "list")
-        response.map { |data| Resources::Billing.new(data) }
+        response.map { |data| Resources::Billings.new(data) }
       end
 
       # Creates a new billing
@@ -53,7 +53,7 @@ module AbacatePay
         end
 
         response = request("POST", "create", json: request_data)
-        Resources::Billing.new(response)
+        Resources::Billings.new(response)
       end
     end
   end

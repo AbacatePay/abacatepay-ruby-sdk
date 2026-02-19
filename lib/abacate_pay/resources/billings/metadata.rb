@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Resources
-    module Billing
+    module Billings
       # Represents metadata for a billing resource in the AbacatePay system.
       #
       # This class contains additional information related to a billing resource,

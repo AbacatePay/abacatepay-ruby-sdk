@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "abacate_pay/resources/billing/metadata"
-require "abacate_pay/resources/billing/product"
+require "abacate_pay/resources/billings/metadata"
+require "abacate_pay/resources/billings/product"
 
 module AbacatePay
   module Resources
@@ -9,19 +9,19 @@ module AbacatePay
     #
     # Manages billing-related data including payment methods, products, scheduling,
     # and customer information for recurring and one-time payments.
-    class Billing < Resource
+    class Billings < Resource
       # Maps property names to their corresponding resource classes
       RESOURCE_PROPERTIES = {
-        metadata: 'AbacatePay::Resources::Billing::Metadata',
-        customer: 'AbacatePay::Resources::Customer',
-        products: 'AbacatePay::Resources::Billing::Product'
+        metadata: 'AbacatePay::Resources::Billings::Metadata',
+        customer: 'AbacatePay::Resources::Customers',
+        products: 'AbacatePay::Resources::Billings::Product'
       }.freeze
 
       # Maps property names to their corresponding enum classes
       ENUM_PROPERTIES = {
-        status: 'AbacatePay::Enums::Billing::Statuses',
-        frequency: 'AbacatePay::Enums::Billing::Frequencies',
-        methods: 'AbacatePay::Enums::Billing::Methods'
+        status: 'AbacatePay::Enums::Billings::Statuses',
+        frequency: 'AbacatePay::Enums::Billings::Frequencies',
+        methods: 'AbacatePay::Enums::Billings::Methods'
       }.freeze
 
       # Properties that should be handled as DateTime objects
