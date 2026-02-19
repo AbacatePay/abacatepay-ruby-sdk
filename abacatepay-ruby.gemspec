@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "lib/abacatepay/version"
+require_relative "lib/abacate_pay/version"
 
 Gem::Specification.new do |spec|
   spec.name = "abacatepay-ruby"
