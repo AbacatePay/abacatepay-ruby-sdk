@@ -12,8 +12,9 @@ module AbacatePay
       # @return [DateTime, nil] The initialized DateTime object or nil
       # @raise [ArgumentError] If the value is invalid
       def initialize_date_time(value)
-        return nil if value.nil? || value.empty?
+        return nil if value.nil?
         return value.clone if value.is_a?(DateTime)
+        return nil if value.empty?
 
         DateTime.parse(value)
       rescue Date::Error
@@ -39,14 +40,25 @@ module AbacatePay
       # @return [Object, nil] The initialized resource or nil
       # @raise [ArgumentError] If the value is invalid
       def initialize_resource(resource_class, value)
-        return nil if value.nil? || value.empty?
+        return nil if value.nil?
         return value.clone if value.is_a?(resource_class)
+        return nil if value.respond_to?(:empty?) && value.empty?
 
         unless value.is_a?(Hash)
           raise ArgumentError, "Invalid resource value. Expected Hash or #{resource_class}, got #{value.class}"
         end
 
         resource_class.new(value)
+      end
+
+      # Default value processor — returns the value as-is.
+      # Subclasses override this to handle enums, datetimes, and nested resources.
+      #
+      # @param _property [String] The property name
+      # @param value [Object] The raw value
+      # @return [Object] The processed value
+      def process_value(_property, value)
+        value
       end
 
       # Fill the object with data
