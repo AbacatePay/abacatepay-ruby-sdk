@@ -30,4 +30,15 @@ jobs:
           echo ":rubygems_api_key: ${RUBYGEMS_API_KEY}" >> $HOME/.gem/credentials
           rm -f *.gem
           gem build *.gemspec
-          gem push "$(ls -1 *.gem | head -1)"
+          gem push *.gem
+
+      - name: Publish to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p $HOME/.gem
+          touch $HOME/.gem/credentials
+          chmod 0600 $HOME/.gem/credentials
+          echo "---" > $HOME/.gem/credentials
+          echo ":github: Bearer ${GITHUB_TOKEN}" >> $HOME/.gem/credentials
+          gem push --key github --host https://rubygems.pkg.github.com/AbacatePay *.gem
