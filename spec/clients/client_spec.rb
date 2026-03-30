@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Clients::Client do
   let(:stubs) { Faraday::Adapter::Test::Stubs.new }
   let(:faraday_client) do
-    Faraday.new(url: "https://sandbox.api.abacatepay.com/v1/test/") do |f|
+    Faraday.new(url: "https://api.abacatepay.com/v1/test/") do |f|
       f.adapter :test, stubs
     end
   end

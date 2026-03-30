@@ -46,11 +46,7 @@ module AbacatePay
     #
     # @api public
     def api_url
-      if environment == :production
-        "https://api.abacatepay.com/v1"
-      else
-        "https://sandbox.api.abacatepay.com/v1"
-      end
+      "https://api.abacatepay.com/v1"
     end
   end
 end
