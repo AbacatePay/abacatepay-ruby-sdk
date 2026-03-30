@@ -10,11 +10,16 @@ module AbacatePay
         # One-time billing.
         # @return [String] Represents a billing that occurs only once
         ONE_TIME = "ONE_TIME"
+        WEEKLY = "WEEKLY"
+        MONTHLY = "MONTHLY"
+        SEMIANNUALLY = "SEMIANNUALLY"
+        ANNUALLY = "ANNUALLY"
+        MULTIPLE_PAYMENTS = "MULTIPLE_PAYMENTS"
 
         # Gets all valid frequency values
         # @return [Array<String>] List of all valid frequencies
         def self.values
-          [ONE_TIME]
+          [ONE_TIME, WEEKLY, MONTHLY, SEMIANNUALLY, ANNUALLY, MULTIPLE_PAYMENTS]
         end
 
         # Validates if a given value is a valid frequency
