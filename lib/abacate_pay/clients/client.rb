@@ -27,6 +27,7 @@ module AbacatePay
       def request(method, uri, options = {})
         response = @client.public_send(method.downcase) do |req|
           req.url uri
+          req.params = options[:params] if options[:params]
           req.body = options[:json].to_json if options[:json]
         end
 
@@ -42,8 +43,13 @@ module AbacatePay
       # @param uri [String] The endpoint URI
       # @return [Faraday::Connection] Configured Faraday client
       def build_client(uri)
+        base_url = if uri.empty?
+                     "#{AbacatePay.configuration.api_url}/"
+                   else
+                     "#{AbacatePay.configuration.api_url}/#{uri}/"
+                   end
         Faraday.new(
-          url: "#{AbacatePay.configuration.api_url}/#{uri}/",
+          url: base_url,
           headers: {
             "Content-Type" => "application/json",
             "Authorization" => "Bearer #{AbacatePay.configuration.api_token}"

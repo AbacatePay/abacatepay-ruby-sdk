@@ -10,11 +10,12 @@ module AbacatePay
         # PIX payment method.
         # @return [String] Represents the PIX payment method, a popular instant payment system in Brazil
         PIX = "PIX"
+        CARD = "CARD"
 
         # Gets all valid method values
         # @return [Array<String>] List of all valid payment methods
         def self.values
-          [PIX]
+          [PIX, CARD]
         end
 
         # Validates if a given value is a valid method

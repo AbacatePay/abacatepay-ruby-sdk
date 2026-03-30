@@ -2,7 +2,7 @@
 
 module AbacatePay
   module Resources
-    module Billings
+    class Billings
       # Represents a product in a billing resource in the AbacatePay system.
       #
       # This class contains information about a product, such as its identifier,

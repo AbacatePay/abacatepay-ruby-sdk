@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require "abacate_pay/resources/billings/metadata"
-require "abacate_pay/resources/billings/product"
-
 module AbacatePay
   module Resources
     # Represents a billing resource in the AbacatePay payment system.
@@ -118,3 +115,6 @@ module AbacatePay
     end
   end
 end
+
+require "abacate_pay/resources/billings/metadata"
+require "abacate_pay/resources/billings/product"

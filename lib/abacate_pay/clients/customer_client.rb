@@ -14,16 +14,26 @@ module AbacatePay
 
       # Retrieves a list of customers
       #
-      # @return [Array<Resources::Customer>] Array of Customer objects
-      def list
-        response = request("GET", "list")
+      # @param params [Hash] Optional pagination params (after, before, limit)
+      # @return [Array<Resources::Customers>] Array of Customer objects
+      def list(**params)
+        response = request("GET", "list", params: params.empty? ? nil : params)
         response.map { |data| Resources::Customers.new(data) }
+      end
+
+      # Retrieves a customer by ID
+      #
+      # @param id [String] The customer ID
+      # @return [Resources::Customers] The Customer object
+      def get(id)
+        response = request("GET", "get", params: { id: id })
+        Resources::Customers.new(response)
       end
 
       # Creates a new customer
       #
-      # @param data [Resources::Customer] The customer data to be sent for creation
-      # @return [Resources::Customer] The created Customer object
+      # @param data [Resources::Customers] The customer data to be sent for creation
+      # @return [Resources::Customers] The created Customer object
       def create(data)
         response = request("POST", "create", json: {
           name: data.metadata&.name,
@@ -32,6 +42,15 @@ module AbacatePay
           taxId: data.metadata&.tax_id
         })
 
+        Resources::Customers.new(response)
+      end
+
+      # Deletes a customer
+      #
+      # @param id [String] The customer ID
+      # @return [Resources::Customers] The deleted Customer object
+      def delete(id)
+        response = request("POST", "delete", json: { id: id })
         Resources::Customers.new(response)
       end
     end

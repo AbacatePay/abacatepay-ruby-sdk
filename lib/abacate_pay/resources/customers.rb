@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "abacate_pay/resources/customers/metadata"
-
 module AbacatePay
   module Resources
     # Represents a customer resource in the AbacatePay payment system.
@@ -55,3 +53,5 @@ module AbacatePay
     end
   end
 end
+
+require "abacate_pay/resources/customers/metadata"
