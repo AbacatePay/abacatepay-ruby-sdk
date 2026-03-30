@@ -3,7 +3,9 @@
 RSpec.describe AbacatePay::Enums::Billings::Frequencies do
   describe ".values" do
     it "returns all valid frequencies" do
-      expect(described_class.values).to contain_exactly("ONE_TIME")
+      expect(described_class.values).to contain_exactly(
+        "ONE_TIME", "WEEKLY", "MONTHLY", "SEMIANNUALLY", "ANNUALLY", "MULTIPLE_PAYMENTS"
+      )
     end
 
     it "returns an Array" do
@@ -16,8 +18,12 @@ RSpec.describe AbacatePay::Enums::Billings::Frequencies do
       expect(described_class.valid?("ONE_TIME")).to be true
     end
 
+    it "returns true for MONTHLY" do
+      expect(described_class.valid?("MONTHLY")).to be true
+    end
+
     it "returns false for an unsupported frequency" do
-      expect(described_class.valid?("MONTHLY")).to be false
+      expect(described_class.valid?("DAILY")).to be false
     end
 
     it "returns false for a lowercase value" do
@@ -35,7 +41,7 @@ RSpec.describe AbacatePay::Enums::Billings::Frequencies do
     end
 
     it "raises ArgumentError for an invalid frequency" do
-      expect { described_class.validate!("WEEKLY") }
+      expect { described_class.validate!("DAILY") }
         .to raise_error(ArgumentError, /Invalid frequency/)
     end
 

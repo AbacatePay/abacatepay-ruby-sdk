@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["Matheus Cardoso"]
   spec.email = ["mathuscardoso@gmail.com"]
 
-  spec.summary = "AbacatePay Ruby on Rails SDK for you to start receiving payments in seconds"
-  spec.description = "The easiest way to integrate your Ruby on Rails SDK base code to AbacatePay Gateway with support to coroutines."
+  spec.summary = "AbacatePay Ruby SDK for you to start receiving payments in seconds"
+  spec.description = "The easiest way to integrate your Ruby application with AbacatePay Gateway for payments, subscriptions, PIX transfers, and more."
   spec.homepage = "https://www.abacatepay.com/"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
@@ -33,13 +33,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "rails", "~> 7.0", ">= 7.0.0"
   spec.add_dependency "faraday", "~> 2.9"
 
   # Development dependencies
-  spec.add_development_dependency "rspec-rails", "~> 6.0"
+  spec.add_development_dependency "rspec", "~> 3.12"
   spec.add_development_dependency "rubocop", "~> 1.57"
-  spec.add_development_dependency "rubocop-rails", "~> 2.22"
   spec.add_development_dependency "rubocop-rspec", "~> 2.25"
   spec.add_development_dependency "simplecov", "~> 0.22"
 

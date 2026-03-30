@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Enums::Billings::Methods do
   describe ".values" do
     it "returns all valid payment methods" do
-      expect(described_class.values).to contain_exactly("PIX")
+      expect(described_class.values).to contain_exactly("PIX", "CARD")
     end
 
     it "returns an Array" do

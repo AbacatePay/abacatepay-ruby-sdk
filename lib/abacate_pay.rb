@@ -35,6 +35,60 @@ module AbacatePay
   # @return [void]
   def self.reset!
     self.configuration = Configuration.new
+    @customers = nil
+    @products = nil
+    @coupons = nil
+    @checkouts = nil
+    @subscriptions = nil
+    @transparents = nil
+    @pix = nil
+    @payouts = nil
+    @store = nil
+  end
+
+  # @return [Clients::CustomerClient] Customer API client
+  def self.customers
+    @customers ||= Clients::CustomerClient.new
+  end
+
+  # @return [Clients::ProductClient] Product API client
+  def self.products
+    @products ||= Clients::ProductClient.new
+  end
+
+  # @return [Clients::CouponClient] Coupon API client
+  def self.coupons
+    @coupons ||= Clients::CouponClient.new
+  end
+
+  # @return [Clients::CheckoutClient] Checkout API client
+  def self.checkouts
+    @checkouts ||= Clients::CheckoutClient.new
+  end
+
+  # @return [Clients::SubscriptionClient] Subscription API client
+  def self.subscriptions
+    @subscriptions ||= Clients::SubscriptionClient.new
+  end
+
+  # @return [Clients::TransparentClient] PIX Transparent API client
+  def self.transparents
+    @transparents ||= Clients::TransparentClient.new
+  end
+
+  # @return [Clients::PixClient] PIX Transfer API client
+  def self.pix
+    @pix ||= Clients::PixClient.new
+  end
+
+  # @return [Clients::PayoutClient] Payout API client
+  def self.payouts
+    @payouts ||= Clients::PayoutClient.new
+  end
+
+  # @return [Clients::StoreClient] Store API client
+  def self.store
+    @store ||= Clients::StoreClient.new
   end
 end
 

@@ -8,7 +8,9 @@ module AbacatePay
       URI = "billing"
 
       # @param client [Faraday::Connection, nil] Optional Faraday client for custom configurations
+      # @deprecated Use {CheckoutClient} instead
       def initialize(client = nil)
+        warn "[DEPRECATION] BillingClient is deprecated. Use CheckoutClient instead."
         super(URI, client)
       end
 
