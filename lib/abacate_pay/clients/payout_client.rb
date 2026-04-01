@@ -13,7 +13,7 @@ module AbacatePay
       # @return [Array<Resources::Payouts>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        response.map { |data| Resources::Payouts.new(data) }
+        Array(response).map { |data| Resources::Payouts.new(data) }
       end
 
       # @param id [String] Payout ID

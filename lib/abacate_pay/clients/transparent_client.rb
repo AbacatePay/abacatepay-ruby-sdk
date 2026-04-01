@@ -13,7 +13,7 @@ module AbacatePay
       # @return [Array<Resources::Transparents>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        response.map { |data| Resources::Transparents.new(data) }
+        Array(response).map { |data| Resources::Transparents.new(data) }
       end
 
       # @param data [Resources::Transparents]

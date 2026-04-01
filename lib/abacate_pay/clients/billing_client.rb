@@ -5,7 +5,7 @@ module AbacatePay
     # Client class for managing billing-related operations in the AbacatePay API.
     class BillingClient < Client
       # API endpoint for billing-related operations
-      URI = "billing"
+      URI = "billings"
 
       # @param client [Faraday::Connection, nil] Optional Faraday client for custom configurations
       # @deprecated Use {CheckoutClient} instead
@@ -19,7 +19,7 @@ module AbacatePay
       # @return [Array<Resources::Billing>] Array of Billing objects
       def list
         response = request("GET", "list")
-        response.map { |data| Resources::Billings.new(data) }
+        Array(response).map { |data| Resources::Billings.new(data) }
       end
 
       # Creates a new billing
@@ -32,7 +32,7 @@ module AbacatePay
           methods: data.methods,
           returnUrl: data.metadata&.return_url,
           completionUrl: data.metadata&.completion_url,
-          products: data.products&.map { |product|
+          items: data.products&.map { |product|
             {
               externalId: product.external_id,
               name: product.name,

@@ -5,7 +5,7 @@ module AbacatePay
     # Client class for managing customer-related operations in the AbacatePay API.
     class CustomerClient < Client
       # API endpoint for customer-related operations
-      URI = "customer"
+      URI = "customers"
 
       # @param client [Faraday::Connection, nil] Optional Faraday client for custom configurations
       def initialize(client = nil)
@@ -18,7 +18,7 @@ module AbacatePay
       # @return [Array<Resources::Customers>] Array of Customer objects
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        response.map { |data| Resources::Customers.new(data) }
+        Array(response).map { |data| Resources::Customers.new(data) }
       end
 
       # Retrieves a customer by ID

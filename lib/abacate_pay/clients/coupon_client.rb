@@ -13,7 +13,7 @@ module AbacatePay
       # @return [Array<Resources::Coupons>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        response.map { |data| Resources::Coupons.new(data) }
+        Array(response).map { |data| Resources::Coupons.new(data) }
       end
 
       # @param id [String] Coupon ID

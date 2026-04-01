@@ -31,7 +31,10 @@ module AbacatePay
           req.body = options[:json].to_json if options[:json]
         end
 
-        JSON.parse(response.body).fetch("data")
+        parsed = JSON.parse(response.body)
+        raise ApiError, "API error: #{parsed['error']}" if parsed['error']
+
+        parsed.fetch("data")
       rescue Faraday::Error => e
         handle_request_error(e)
       rescue StandardError => e

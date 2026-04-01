@@ -13,7 +13,7 @@ module AbacatePay
       # @return [Array<Resources::Products>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        response.map { |data| Resources::Products.new(data) }
+        Array(response).map { |data| Resources::Products.new(data) }
       end
 
       # @param id [String] Product ID or externalId
@@ -26,15 +26,17 @@ module AbacatePay
       # @param data [Resources::Products]
       # @return [Resources::Products]
       def create(data)
-        response = request("POST", "create", json: {
+        request_data = {
           externalId: data.external_id,
           name: data.name,
           price: data.price,
           currency: data.currency || "BRL",
-          description: data.description,
-          imageUrl: data.image_url,
-          cycle: data.cycle
-        })
+          description: data.description
+        }
+        request_data[:imageUrl] = data.image_url if data.image_url && !data.image_url.to_s.empty?
+        request_data[:cycle] = data.cycle if data.cycle && !data.cycle.to_s.empty?
+
+        response = request("POST", "create", json: request_data)
         Resources::Products.new(response)
       end
 

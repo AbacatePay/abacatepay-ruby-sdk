@@ -40,13 +40,15 @@ module AbacatePay
       raise ConfigurationError, "Invalid environment" unless %i[production sandbox].include?(environment)
     end
 
-    # Gets the base API URL based on the environment
+    # Gets the base API URL, auto-detecting API version from token prefix.
+    # Tokens starting with "abc_dev_" or "abc_live_" are v2; others default to v1.
     #
     # @return [String] The base API URL
     #
     # @api public
     def api_url
-      "https://api.abacatepay.com/v1"
+      version = api_token&.match?(/\Aabc_(dev|live)_/) ? "v2" : "v1"
+      "https://api.abacatepay.com/#{version}"
     end
   end
 end
