@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "base64", "~> 0.2"
   spec.add_dependency "faraday", "~> 2.9"
 
   # Development dependencies

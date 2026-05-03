@@ -36,7 +36,7 @@ module AbacatePay
         request_data[:imageUrl] = data.image_url if data.image_url && !data.image_url.to_s.empty?
         request_data[:cycle] = data.cycle if data.cycle && !data.cycle.to_s.empty?
 
-        response = request("POST", "create", json: request_data)
+        response = request("POST", "create", json: request_data.compact)
         Resources::Products.new(response)
       end
 

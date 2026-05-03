@@ -40,7 +40,7 @@ module AbacatePay
           email: data.metadata&.email,
           cellphone: data.metadata&.cellphone,
           taxId: data.metadata&.tax_id
-        })
+        }.compact)
 
         Resources::Customers.new(response)
       end

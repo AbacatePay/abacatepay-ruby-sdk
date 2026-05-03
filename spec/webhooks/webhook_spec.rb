@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require "openssl"
+require "base64"
 
 RSpec.describe AbacatePay::Webhooks do
   let(:secret) { "test_webhook_secret_123" }
   let(:payload) { '{"event":"checkout.completed","data":{"id":"chk-1"}}' }
-  let(:valid_signature) { OpenSSL::HMAC.hexdigest("SHA256", secret, payload) }
+  let(:valid_signature) { Base64.strict_encode64(OpenSSL::HMAC.digest("SHA256", secret, payload)) }
 
   describe ".verify!" do
     it "returns true for a valid signature" do
@@ -39,6 +40,15 @@ RSpec.describe AbacatePay::Webhooks do
       expect(
         described_class.valid?(payload: payload, signature: "bad", secret: secret)
       ).to be false
+    end
+  end
+
+  describe "default key (PUBLIC_KEY)" do
+    it "verifies a signature computed with PUBLIC_KEY when secret kwarg is omitted" do
+      sig = Base64.strict_encode64(
+        OpenSSL::HMAC.digest("SHA256", AbacatePay::Webhooks::PUBLIC_KEY, payload)
+      )
+      expect(described_class.verify!(payload: payload, signature: sig)).to be true
     end
   end
 
