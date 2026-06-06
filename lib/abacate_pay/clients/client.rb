@@ -37,6 +37,11 @@ module AbacatePay
         parsed.fetch("data")
       rescue Faraday::Error => e
         handle_request_error(e)
+      rescue AbacatePay::Error
+        # API-level errors (e.g. ApiError raised above) already carry the real
+        # cause — let them propagate untouched instead of being re-wrapped as
+        # "Unexpected error", which hides the original message.
+        raise
       rescue StandardError => e
         raise ApiError, "Unexpected error: #{e.message}"
       end

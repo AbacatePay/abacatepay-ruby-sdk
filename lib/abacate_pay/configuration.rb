@@ -41,13 +41,14 @@ module AbacatePay
     end
 
     # Gets the base API URL, auto-detecting API version from token prefix.
-    # Tokens starting with "abc_dev_" or "abc_live_" are v2; others default to v1.
+    # Tokens starting with "abc_dev_", "abc_live_" or "abc_prod_" are v2;
+    # others (legacy keys) default to v1.
     #
     # @return [String] The base API URL
     #
     # @api public
     def api_url
-      version = api_token&.match?(/\Aabc_(dev|live)_/) ? "v2" : "v1"
+      version = api_token&.match?(/\Aabc_(dev|live|prod)_/) ? "v2" : "v1"
       "https://api.abacatepay.com/#{version}"
     end
   end
