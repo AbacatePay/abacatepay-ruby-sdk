@@ -57,15 +57,17 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "#simulate_payment" do
     before do
-      stubs.post("/v1/transparents/simulate-payment") do
+      stubs.post("/v1/transparents/simulate-payment?id=tr-1") do |env|
+        expect(env.params["id"]).to eq("tr-1")
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "tr-1", "status" => "PAID" } }.to_json]
       end
     end
 
-    it "returns a Transparents resource" do
+    it "sends the id as a query param and returns a Transparents resource" do
       result = client.simulate_payment("tr-1")
       expect(result).to be_a(AbacatePay::Resources::Transparents)
+      expect(result.status).to eq("PAID")
     end
   end
 
