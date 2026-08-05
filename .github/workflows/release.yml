@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -59,10 +59,10 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -70,8 +70,13 @@ jobs:
       # Exchanges the OIDC token for a scoped, short-lived RubyGems credential.
       # Requires a trusted publisher configured at:
       # https://rubygems.org/gems/abacatepay-ruby/trusted_publishers
+      #
+      # Actions in this job are pinned by commit SHA, not by tag: this job holds
+      # id-token: write, which is the gem's publishing credential, and a tag can
+      # be repointed by whoever maintains the action. Dependabot keeps the SHAs
+      # current and rewrites the trailing version comment.
       - name: Configure RubyGems credentials
-        uses: rubygems/configure-rubygems-credentials@v2
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
 
       - name: Build gem
         run: gem build abacatepay-ruby.gemspec
