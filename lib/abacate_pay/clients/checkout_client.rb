@@ -17,7 +17,7 @@ module AbacatePay
       # @return [Array<Resources::Checkouts>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::Checkouts.new(data) }
+        build_list(response, Resources::Checkouts)
       end
 
       # @param id [String] Checkout ID
@@ -62,8 +62,29 @@ module AbacatePay
           items: data.products&.map { |product| { id: product.external_id, quantity: product.quantity } },
           externalId: data.external_id,
           coupons: data.coupons,
-          customerId: customer_id.to_s.empty? ? nil : customer_id
-        }.compact
+          customerId: customer_id.to_s.empty? ? nil : customer_id,
+          upSellProductId: data.up_sell_product_id,
+          metadata: data.custom_metadata
+        }.merge(boleto_options(data)).merge(card_options(data)).compact
+      end
+
+      # BOLETO-only fields. The API rejects them for other methods, so they are
+      # only sent when the caller actually set them.
+      #
+      # @param data [Resources::Checkouts] The checkout to serialize
+      # @return [Hash] The boleto payload fragment
+      def boleto_options(data)
+        { dueDate: data.due_date, interest: data.interest, fine: data.fine }
+      end
+
+      # CARD-only instalment cap, which the API nests under `card`.
+      #
+      # @param data [Resources::Checkouts] The checkout to serialize
+      # @return [Hash] The card payload fragment
+      def card_options(data)
+        return {} unless data.max_installments
+
+        { card: { maxInstallments: data.max_installments } }
       end
     end
   end

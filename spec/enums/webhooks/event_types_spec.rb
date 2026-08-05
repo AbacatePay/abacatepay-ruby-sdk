@@ -2,8 +2,8 @@
 
 RSpec.describe AbacatePay::Enums::Webhooks::EventTypes do
   describe ".values" do
-    it "returns 13 event types" do
-      expect(described_class.values.size).to eq(13)
+    it "returns 15 event types" do
+      expect(described_class.values.size).to eq(15)
     end
 
     it "includes checkout events" do
@@ -12,6 +12,17 @@ RSpec.describe AbacatePay::Enums::Webhooks::EventTypes do
 
     it "includes transfer events" do
       expect(described_class.values).to include("transfer.completed", "transfer.failed")
+    end
+  end
+
+  # Dunning and trial signals were missing until 1.1.0.
+  describe "subscription lifecycle events" do
+    it "includes payment_failed" do
+      expect(described_class.values).to include("subscription.payment_failed")
+    end
+
+    it "includes trial_started" do
+      expect(described_class.values).to include("subscription.trial_started")
     end
   end
 

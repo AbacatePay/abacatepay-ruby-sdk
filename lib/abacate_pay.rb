@@ -2,6 +2,7 @@
 
 require "abacate_pay/version"
 require "abacate_pay/configuration"
+require "abacate_pay/collection"
 
 # Main module for AbacatePay SDK integration
 module AbacatePay

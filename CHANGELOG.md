@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-05
+
+### Added
+
+- **BOLETO support.** The method was rejected outright by the `Billings::Methods`
+  enum even though it is a first-class payment method in the v2 API. Adds the
+  enum value, the boleto-only `due_date`/`interest`/`fine` fields on checkouts,
+  and a `method:` argument on `TransparentClient#create` (which previously
+  hard-coded PIX). Boleto responses now expose `bar_code`, `url`, `br_code`,
+  `br_code_base64` and `expires_at`.
+- **Cursor pagination.** List endpoints cap at 100 items and report `hasMore`
+  plus a cursor; the SDK discarded that metadata, making record 101
+  unreachable. `list` now returns an `AbacatePay::Collection` — Enumerable and
+  Array-compatible, so existing code is unaffected — carrying `has_more?` and
+  `next_cursor`. `each_page` and `auto_paging_each` walk every page.
+- **Retries with exponential backoff and jitter** on 429 and 5xx, configurable
+  via `config.max_retries` (default 2). Only idempotent methods are retried;
+  POST never is, because repeating `checkouts/create` after a timeout could
+  charge a customer twice and the API exposes no idempotency key.
+- **Optional request logging** via `config.logger`, with the bearer token
+  redacted and bodies never logged.
+- `SubscriptionClient#change_plan` and `#record_usage` — the last two of the 45
+  documented v2 endpoints. All 45 are now covered.
+- `subscription.payment_failed` and `subscription.trial_started` webhook event
+  types. `payment_failed` is the dunning signal.
+- Checkout fields the v2 API accepts but the SDK never sent: `max_installments`
+  (nested under `card`), `up_sell_product_id` and `custom_metadata`.
+- A `User-Agent` identifying the SDK and Ruby version.
+
+### Fixed
+
+- `Webhooks.parse` aside, malformed API responses raised `JSON::ParserError`
+  and a missing `data` field raised `KeyError`; both are now `ApiError`.
+
+### Changed
+
+- `BillingClient`'s deprecation warning now states that its `/billings/*`
+  endpoints do not exist on either API version, so every call fails. It will be
+  removed in 2.0.0.
+
+### Corrected
+
+- The 1.0.0 notes stated that the v1 API "has been retired and answers Not found
+  for every path". That is wrong: v1 is still served, under a different dialect
+  — singular paths (`/v1/billing/`, `/v1/customer/`) and different resource
+  names (`pixQrCode`). The original diagnosis tested v2-shaped paths against
+  `/v1`. The fix itself stands: this SDK only ever spoke v2's dialect, so 10 of
+  the 12 paths it calls do not exist on v1 and routing there produced 404s.
+
 ## [1.0.0] - 2026-08-05
 
 First stable release. The public surface is now covered by CI on four Ruby
@@ -121,5 +170,6 @@ versions and will not change without a major bump.
 
 - Initial release
 
+[1.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.0.0
 [0.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v0.1.0

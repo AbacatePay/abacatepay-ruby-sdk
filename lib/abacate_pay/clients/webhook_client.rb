@@ -20,7 +20,7 @@ module AbacatePay
       # @return [Array<Resources::WebhookEndpoints>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::WebhookEndpoints.new(data) }
+        build_list(response, Resources::WebhookEndpoints)
       end
 
       # @param id [String] The webhook ID

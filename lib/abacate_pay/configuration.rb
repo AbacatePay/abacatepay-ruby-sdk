@@ -8,9 +8,11 @@ module AbacatePay
   #
   # @api public
   class Configuration
-    # The only base URL AbacatePay serves. The v1 prefix was retired and now
-    # answers `{"error":"Not found"}` for every path, so there is nothing to
-    # negotiate between.
+    # The only base URL this SDK speaks. v1 still exists, but under a
+    # different dialect — singular paths (`/v1/billing/`, `/v1/customer/`) and
+    # different resource names (`pixQrCode`) — which this SDK has never
+    # implemented. Deriving a base URL from the token prefix only produced 404s
+    # against v1 while sending v2-shaped paths.
     API_BASE_URL = "https://api.abacatepay.com/v2"
 
     # @return [String] API token for authentication
@@ -19,11 +21,25 @@ module AbacatePay
     # @return [Integer] Request timeout in seconds
     attr_accessor :timeout
 
+    # Retries apply to idempotent requests only (GET/HEAD/OPTIONS) on 429 and
+    # 5xx, with exponential backoff and jitter. Set to 0 to disable.
+    #
+    # @return [Integer] Maximum retry attempts
+    attr_accessor :max_retries
+
+    # Optional logger. Request and response headers are logged with the bearer
+    # token redacted; bodies are never logged, since they carry customer PII.
+    #
+    # @return [Logger, nil]
+    attr_accessor :logger
+
     # Initialize a new configuration with default values
     #
     # @api public
     def initialize
       @timeout = 30
+      @max_retries = 2
+      @logger = nil
       @api_token = nil
     end
 

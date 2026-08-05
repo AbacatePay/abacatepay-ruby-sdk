@@ -18,7 +18,7 @@ module AbacatePay
       # @return [Array<Resources::Customers>] Array of Customer objects
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::Customers.new(data) }
+        build_list(response, Resources::Customers)
       end
 
       # Retrieves a customer by ID

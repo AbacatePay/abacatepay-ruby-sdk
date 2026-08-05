@@ -122,4 +122,15 @@ RSpec/SpecFilePathFormat:
 RSpec/DescribeClass:
   Exclude:
     - "spec/clients/request_contract_spec.rb"
+    - "spec/clients/pagination_spec.rb"
+    - "spec/clients/resilience_spec.rb"
+    - "spec/clients/logging_spec.rb"
+    - "spec/clients/boleto_spec.rb"
     - "spec/packaging_spec.rb"
+
+# `has_more?` mirrors the API's own `hasMore` field and matches the convention
+# other payment SDKs use for cursor pagination. `more?` would read as a
+# different question.
+Naming/PredicatePrefix:
+  AllowedMethods:
+    - has_more?

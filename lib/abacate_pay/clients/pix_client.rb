@@ -17,7 +17,7 @@ module AbacatePay
       # @return [Array<Resources::PixTransfers>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::PixTransfers.new(data) }
+        build_list(response, Resources::PixTransfers)
       end
 
       # @param id [String] PIX transfer ID

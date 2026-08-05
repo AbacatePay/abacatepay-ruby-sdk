@@ -20,7 +20,13 @@ module AbacatePay
 
       attr_reader :id, :url, :amount, :status, :dev_mode, :methods,
                   :products, :metadata, :customer, :coupons, :external_id,
-                  :frequency, :created_at, :updated_at
+                  :frequency, :created_at, :updated_at,
+                  # BOLETO-only: due date (YYYY-MM-DD) plus late-payment charges.
+                  :due_date, :interest, :fine,
+                  # CARD-only: maximum number of instalments offered.
+                  :max_installments,
+                  # Order bump shown at checkout, and free-form merchant data.
+                  :up_sell_product_id, :custom_metadata
 
       def initialize(data)
         fill(data)
@@ -70,7 +76,9 @@ module AbacatePay
 
       attr_writer :id, :url, :amount, :status, :dev_mode, :methods,
                   :products, :metadata, :customer, :coupons, :external_id,
-                  :frequency, :created_at, :updated_at
+                  :frequency, :created_at, :updated_at,
+                  :due_date, :interest, :fine, :max_installments,
+                  :up_sell_product_id, :custom_metadata
     end
   end
 end
