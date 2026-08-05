@@ -71,6 +71,11 @@ RSpec.describe AbacatePay::Clients::Client do
         expect { client.call_request("GET", "bad") }
           .to raise_error(AbacatePay::ApiError)
       end
+
+      it "preserves the API error message without double-wrapping it" do
+        expect { client.call_request("GET", "bad") }
+          .to raise_error(AbacatePay::ApiError, "API error: something")
+      end
     end
 
     context "when a Faraday connection error occurs" do
