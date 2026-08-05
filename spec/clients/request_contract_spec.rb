@@ -97,9 +97,10 @@ RSpec.describe "Client request contract" do
   # ── API base path ─────────────────────────────────────────────────────────
   #
   # The SDK used to derive v1/v2 from the token prefix and fell back to v1 for
-  # anything unrecognised. The v1 prefix has been retired and answers
-  # {"error":"Not found"} for every path, so a token that merely looked
-  # unfamiliar made every call fail. There is one base path now.
+  # anything unrecognised — while still sending v2-shaped paths. v1 uses a
+  # different dialect (`/v1/billing/`, `/v1/customer/`, `pixQrCode`), so 10 of
+  # the 12 paths this SDK calls do not exist there and every such call 404'd.
+  # There is one base path now.
 
   %w[abc_live_token abc_dev_token legacy_token_format a].each do |token|
     it "routes #{token.inspect} to the v2 base path" do

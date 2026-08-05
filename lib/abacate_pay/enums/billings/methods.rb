@@ -10,12 +10,19 @@ module AbacatePay
         # PIX payment method.
         # @return [String] Represents the PIX payment method, a popular instant payment system in Brazil
         PIX = "PIX"
+
+        # @return [String] Credit card payment
         CARD = "CARD"
+
+        # Boleto bancário. Supports a due date and late-payment interest/fine —
+        # see Resources::Checkouts#due_date, #interest and #fine.
+        # @return [String] Boleto payment method
+        BOLETO = "BOLETO"
 
         # Gets all valid method values
         # @return [Array<String>] List of all valid payment methods
         def self.values
-          [PIX, CARD]
+          [PIX, CARD, BOLETO]
         end
 
         # Validates if a given value is a valid method

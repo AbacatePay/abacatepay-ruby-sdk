@@ -17,10 +17,10 @@ RSpec.describe AbacatePay::Configuration do
   end
 
   # The SDK used to derive the API version from the token prefix and fall back
-  # to v1 for anything it did not recognise. The v1 prefix has been retired —
-  # https://api.abacatepay.com/v1/customers/list answers
-  # {"success":false,"data":null,"error":"Not found"} — so that fallback made
-  # every call fail for anyone holding a token in an older format.
+  # to v1 for anything it did not recognise, while still sending v2-shaped
+  # paths. v1 exists but speaks a different dialect, so those paths 404'd:
+  # /v1/customers/list is Not found, while the real v1 route is
+  # /v1/customer/list. The fallback broke every call for older token formats.
   describe "#api_url" do
     ["abc_live_token", "abc_dev_token", "legacy_token_format", "", nil].each do |token|
       it "resolves to the v2 base URL for #{token.inspect}" do
@@ -29,7 +29,7 @@ RSpec.describe AbacatePay::Configuration do
       end
     end
 
-    it "never resolves to the retired v1 prefix" do
+    it "never resolves to the v1 prefix this SDK does not speak" do
       configuration.api_token = "anything_at_all"
       expect(configuration.api_url).not_to include("/v1")
     end

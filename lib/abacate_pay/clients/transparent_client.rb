@@ -17,31 +17,21 @@ module AbacatePay
       # @return [Array<Resources::Transparents>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::Transparents.new(data) }
+        build_list(response, Resources::Transparents)
       end
 
-      # @param data [Resources::Transparents]
+      # Creates a transparent charge.
+      #
+      # @param data [Resources::Transparents] The charge to create
+      # @param method [String] "PIX" or "BOLETO"
       # @return [Resources::Transparents]
-      def create(data)
-        request_data = {
-          method: "PIX",
-          data: {
-            amount: data.amount
-          },
-          expiresIn: data.expires_in,
-          description: data.description
-        }
+      # @raise [ArgumentError] if the method is not supported, or if a BOLETO
+      #   charge is missing the payer name/taxId the API requires
+      def create(data, method: Enums::Billings::Methods::PIX)
+        validate_transparent_method!(method)
+        validate_boleto_payer!(data) if method == Enums::Billings::Methods::BOLETO
 
-        if data.customer
-          request_data[:customer] = {
-            name: data.customer.metadata&.name,
-            email: data.customer.metadata&.email,
-            cellphone: data.customer.metadata&.cellphone,
-            taxId: data.customer.metadata&.tax_id
-          }
-        end
-
-        response = request("POST", "create", json: request_data)
+        response = request("POST", "create", json: build_create_payload(data, method))
         Resources::Transparents.new(response)
       end
 
@@ -67,6 +57,68 @@ module AbacatePay
       def refund(id)
         response = request("POST", "refund", json: { id: id })
         Resources::Transparents.new(response)
+      end
+
+      private
+
+      # Only PIX and BOLETO are transparent-checkout methods; CARD goes through
+      # the hosted checkout.
+      #
+      # @param method [String] The requested method
+      # @return [void]
+      def validate_transparent_method!(method)
+        supported = [Enums::Billings::Methods::PIX, Enums::Billings::Methods::BOLETO]
+        return if supported.include?(method)
+
+        raise ArgumentError, "Transparent checkout supports #{supported.join(" and ")}, got #{method.inspect}"
+      end
+
+      # The API requires the payer's name and taxId for boleto. Failing here
+      # names the missing field instead of returning a generic 422.
+      #
+      # @param data [Resources::Transparents] The charge to validate
+      # @return [void]
+      def validate_boleto_payer!(data)
+        metadata = data.customer&.metadata
+        missing = []
+        missing << "customer.metadata.name" if metadata&.name.to_s.strip.empty?
+        missing << "customer.metadata.tax_id" if metadata&.tax_id.to_s.strip.empty?
+        return if missing.empty?
+
+        raise ArgumentError, "BOLETO requires #{missing.join(" and ")}"
+      end
+
+      # @param data [Resources::Transparents] The charge to serialize
+      # @param method [String] "PIX" or "BOLETO"
+      # @return [Hash] The request payload
+      def build_create_payload(data, method)
+        payload = {
+          method: method,
+          data: {
+            amount: data.amount,
+            dueDate: data.due_date
+          }.compact,
+          expiresIn: data.expires_in,
+          description: data.description
+        }.compact
+
+        customer = serialize_customer(data.customer)
+        payload[:data][:customer] = customer if customer
+
+        payload
+      end
+
+      # @param customer [Resources::Customers, nil] The payer
+      # @return [Hash, nil] The customer payload, or nil when absent
+      def serialize_customer(customer)
+        return nil unless customer
+
+        {
+          name: customer.metadata&.name,
+          email: customer.metadata&.email,
+          cellphone: customer.metadata&.cellphone,
+          taxId: customer.metadata&.tax_id
+        }.compact
       end
     end
   end

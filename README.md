@@ -42,8 +42,10 @@ gem 'abacatepay-ruby'
 
 ```ruby
 AbacatePay.configure do |config|
-  config.api_token = ENV['ABACATEPAY_TOKEN']
-  config.timeout = 30 # opcional, em segundos
+  config.api_token  = ENV['ABACATEPAY_TOKEN']
+  config.timeout    = 30      # opcional, segundos (default 30)
+  config.max_retries = 2      # opcional, retry em 429/5xx (default 2, 0 desliga)
+  config.logger     = Rails.logger # opcional, token é redigido
 end
 ```
 
@@ -101,9 +103,26 @@ AbacatePay.checkouts.list(status: 'PAID', email: 'user@example.com')
 
 <div align="center">
 
+Listas retornam no máximo 100 itens. O resultado é uma `Collection` — funciona como Array, e ainda carrega o cursor:
+
+</div>
+
+```ruby
+page = AbacatePay.customers.list
+page.first.id     # funciona como Array
+page.has_more?    # => true
+page.next_cursor  # => "cust_abc123"
+
+# Para percorrer tudo sem lidar com cursor:
+AbacatePay.customers.auto_paging_each { |customer| puts customer.id }
+AbacatePay.customers.each_page { |page| puts page.size }
+```
+
+<div align="center">
+
 ## Versionamento
 
-O SDK fala **exclusivamente a v2** — `https://api.abacatepay.com/v2`. A v1 foi desligada pela AbacatePay e responde `{"error":"Not found"}` em toda rota, então não há o que negociar.
+O SDK fala **exclusivamente a v2** — `https://api.abacatepay.com/v2`. A v1 ainda existe para integrações legadas, mas usa outro dialeto (caminhos no singular como `/v1/billing/`, `/v1/customer/`) que este SDK nunca implementou. Se você precisa da v1, chame a API diretamente.
 
 O ambiente (dev mode x produção) é definido **pela chave de API**, não por configuração: chaves de Dev mode geram transações simuladas. Por isso `config.environment` não faz nada — ela continua aceita para não quebrar initializers existentes, mas emite aviso de depreciação.
 
@@ -214,7 +233,7 @@ Todos os recursos são acessíveis pela fachada `AbacatePay.<recurso>`.
 | `products` | `list` `get` `create` `delete` |
 | `coupons` | `list` `get` `create` `delete` `toggle` |
 | `checkouts` | `list` `get` `create` `refund` |
-| `subscriptions` | `list` `create` `cancel` |
+| `subscriptions` | `list` `create` `cancel` `change_plan` `record_usage` |
 | `transparents` | `list` `create` `check` `simulate_payment` `refund` |
 | `pix` | `list` `get` `send_pix` |
 | `payouts` | `list` `get` `create` |
@@ -363,6 +382,64 @@ AbacatePay.payouts.create(
 
 <div align="center">
 
+### Boleto
+
+Boleto tem vencimento, juros e multa próprios. Todos os valores em centavos.
+
+</div>
+
+```ruby
+AbacatePay.checkouts.create(
+  AbacatePay::Resources::Checkouts.new(
+    methods: ['BOLETO'],
+    due_date: '2026-08-15',              # opcional; default 3 dias úteis
+    interest: { value: 100 },            # juros ao mês
+    fine: { value: 200, type: 'PERCENTAGE' }, # ou type: 'FIXED'
+    products: [
+      AbacatePay::Resources::Billings::Product.new(external_id: 'prod_123', quantity: 1)
+    ]
+  )
+)
+```
+
+<div align="center">
+
+No checkout transparente, o boleto exige nome e CPF/CNPJ do pagador — o SDK valida antes de chamar a API:
+
+</div>
+
+```ruby
+charge = AbacatePay::Resources::Transparents.new(amount: 25_000, due_date: '2026-08-15')
+# charge.customer precisa ter metadata.name e metadata.tax_id
+
+boleto = AbacatePay.transparents.create(charge, method: 'BOLETO')
+boleto.bar_code        # linha digitável
+boleto.url             # PDF para impressão
+boleto.br_code         # PIX alternativo da mesma cobrança
+```
+
+<div align="center">
+
+### Parcelamento e order bump
+
+</div>
+
+```ruby
+AbacatePay.checkouts.create(
+  AbacatePay::Resources::Checkouts.new(
+    methods: ['CARD'],
+    max_installments: 12,
+    up_sell_product_id: 'prod_bump',
+    custom_metadata: { origem: 'app-mobile' },
+    products: [
+      AbacatePay::Resources::Billings::Product.new(external_id: 'prod_123', quantity: 1)
+    ]
+  )
+)
+```
+
+<div align="center">
+
 ### Links de pagamento
 
 Um link reutilizável, pago por vários clientes de forma independente — vendas em massa, rifas, formulários de inscrição. Para uma cobrança por cliente, use `checkouts`.
@@ -407,6 +484,12 @@ Cancela imediatamente; parcelas futuras pendentes são canceladas junto.
 
 ```ruby
 AbacatePay.subscriptions.cancel('subs_abc123xyz')
+
+# Upgrade/downgrade — vale a partir do próximo ciclo
+AbacatePay.subscriptions.change_plan('subs_abc123xyz', product_id: 'prod_pro', quantity: 1)
+
+# Cobrança por uso — produto sem ciclo
+AbacatePay.subscriptions.record_usage('subs_abc123xyz', product_id: 'prod_api', units: 50)
 ```
 
 <div align="center">

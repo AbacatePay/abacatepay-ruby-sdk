@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Enums::Billings::Methods do
   describe ".values" do
     it "returns all valid payment methods" do
-      expect(described_class.values).to contain_exactly("PIX", "CARD")
+      expect(described_class.values).to contain_exactly("PIX", "CARD", "BOLETO")
     end
 
     it "returns an Array" do
@@ -14,6 +14,15 @@ RSpec.describe AbacatePay::Enums::Billings::Methods do
   describe ".valid?" do
     it "returns true for PIX" do
       expect(described_class.valid?("PIX")).to be true
+    end
+
+    it "returns true for CARD" do
+      expect(described_class.valid?("CARD")).to be true
+    end
+
+    # BOLETO is a first-class method in the v2 API and was rejected until 1.1.0.
+    it "returns true for BOLETO" do
+      expect(described_class.valid?("BOLETO")).to be true
     end
 
     it "returns false for an unsupported method" do

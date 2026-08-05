@@ -16,7 +16,7 @@ module AbacatePay
       # @return [Array<Resources::Subscriptions>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::Subscriptions.new(data) }
+        build_list(response, Resources::Subscriptions)
       end
 
       # @param data [Resources::Subscriptions]
@@ -49,6 +49,41 @@ module AbacatePay
       def cancel(id)
         response = request("POST", "cancel", json: { id: id })
         Resources::Subscriptions.new(response)
+      end
+
+      # Changes the main product of an active subscription. The new price takes
+      # effect on the next billing cycle — the current cycle is untouched.
+      #
+      # @param id [String] The subscription ID (`subs_...`)
+      # @param product_id [String] The new product ID (`prod_...`), which must have a cycle
+      # @param quantity [Integer] Quantity of the product, minimum 1
+      # @return [Hash] The pending update object (`status: "PENDING"`)
+      # @raise [ArgumentError] if quantity is below 1
+      def change_plan(id, product_id:, quantity: 1)
+        raise ArgumentError, "quantity must be at least 1, got #{quantity.inspect}" if quantity.to_i < 1
+
+        request("POST", "change-plan", json: { id: id, productId: product_id, quantity: quantity.to_i })
+      end
+
+      # Records usage of a pay-as-you-go product on an active subscription. The
+      # amount is added to the next pending instalment of the cycle.
+      #
+      # @param id [String] The subscription ID (`subs_...`)
+      # @param product_id [String] The usage product ID (`prod_...`), which must NOT have a cycle
+      # @param units [Integer] Number of units, minimum 1
+      # @param action [String] "add" to add units, "subtract" to reverse units
+      #   already recorded in the same cycle
+      # @return [Hash] The recorded usage
+      # @raise [ArgumentError] if units is below 1 or action is not add/subtract
+      def record_usage(id, product_id:, units:, action: "add")
+        raise ArgumentError, "units must be at least 1, got #{units.inspect}" if units.to_i < 1
+
+        unless %w[add subtract].include?(action.to_s)
+          raise ArgumentError, "action must be \"add\" or \"subtract\", got #{action.inspect}"
+        end
+
+        request("POST", "record-usage",
+                json: { id: id, productId: product_id, units: units.to_i, action: action.to_s })
       end
     end
   end

@@ -16,7 +16,7 @@ module AbacatePay
       # @return [Array<Resources::Products>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
-        Array(response).map { |data| Resources::Products.new(data) }
+        build_list(response, Resources::Products)
       end
 
       # @param id [String] Product ID or externalId

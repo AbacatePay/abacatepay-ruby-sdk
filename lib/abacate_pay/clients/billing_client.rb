@@ -2,7 +2,15 @@
 
 module AbacatePay
   module Clients
-    # Client class for managing billing-related operations in the AbacatePay API.
+    # Deprecated client for the v1 billing endpoints.
+    #
+    # The endpoints this class calls (`/billings/create`, `/billings/list`) do
+    # not exist on either API version — v2 replaced them with `/checkouts/*`,
+    # and v1 uses the singular `/billing/*`. Every call raises ApiError.
+    #
+    # Kept only so existing code keeps loading; it will be removed in 2.0.0.
+    #
+    # @deprecated Use {CheckoutClient} instead.
     class BillingClient < Client
       # API endpoint for billing-related operations
       URI = "billings"
@@ -10,7 +18,9 @@ module AbacatePay
       # @param client [Faraday::Connection, nil] Optional Faraday client for custom configurations
       # @deprecated Use {CheckoutClient} instead
       def initialize(client = nil)
-        warn "[DEPRECATION] BillingClient is deprecated. Use CheckoutClient instead."
+        warn "[DEPRECATION] BillingClient calls /billings/* endpoints that do not exist on the " \
+             "AbacatePay API — every request will fail. Use AbacatePay.checkouts instead. " \
+             "This class will be removed in 2.0.0."
         super(URI, client)
       end
 
@@ -19,7 +29,7 @@ module AbacatePay
       # @return [Array<Resources::Billing>] Array of Billing objects
       def list
         response = request("GET", "list")
-        Array(response).map { |data| Resources::Billings.new(data) }
+        build_list(response, Resources::Billings)
       end
 
       # Creates a new billing

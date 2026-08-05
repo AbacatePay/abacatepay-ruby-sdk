@@ -41,6 +41,7 @@ Gem::Specification.new do |spec|
   # NestedParamsEncoder). The lockfile only protects this repo — consumers are
   # protected by the constraint here.
   spec.add_dependency "faraday", "~> 2.14", ">= 2.14.3"
+  spec.add_dependency "faraday-retry", "~> 2.3"
 
   # Development dependencies
   spec.add_development_dependency "bundler-audit", "~> 0.9"

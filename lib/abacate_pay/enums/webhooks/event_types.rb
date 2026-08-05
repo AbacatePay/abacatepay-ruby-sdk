@@ -13,6 +13,12 @@ module AbacatePay
         SUBSCRIPTION_COMPLETED = "subscription.completed"
         SUBSCRIPTION_RENEWED = "subscription.renewed"
         SUBSCRIPTION_CANCELLED = "subscription.cancelled"
+
+        # Recurring charge failed — the dunning signal. Without handling this,
+        # a failing subscription looks identical to a healthy one.
+        SUBSCRIPTION_PAYMENT_FAILED = "subscription.payment_failed"
+
+        SUBSCRIPTION_TRIAL_STARTED = "subscription.trial_started"
         TRANSFER_COMPLETED = "transfer.completed"
         TRANSFER_FAILED = "transfer.failed"
         PAYOUT_COMPLETED = "payout.completed"
@@ -23,6 +29,7 @@ module AbacatePay
             CHECKOUT_COMPLETED, CHECKOUT_REFUNDED, CHECKOUT_DISPUTED,
             TRANSPARENT_COMPLETED, TRANSPARENT_REFUNDED, TRANSPARENT_DISPUTED,
             SUBSCRIPTION_COMPLETED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED,
+            SUBSCRIPTION_PAYMENT_FAILED, SUBSCRIPTION_TRIAL_STARTED,
             TRANSFER_COMPLETED, TRANSFER_FAILED,
             PAYOUT_COMPLETED, PAYOUT_FAILED
           ]
