@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-05
+
+First stable release. The public surface is now covered by CI on four Ruby
+versions and will not change without a major bump.
+
 ### Added
 
 - Full API coverage: checkouts, coupons, customers, payouts, PIX transfers,
@@ -87,6 +92,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: `required_ruby_version` is now `>= 3.2.0`** (was `>= 2.6.0`). The
+  old floor was never installable — faraday 2.x requires Ruby 3.0 or newer — so
+  no working installation is losing support, but a `bundle update` on Ruby 2.6
+  or 3.1 will now refuse to resolve instead of failing later.
 - **`config.environment` is deprecated and now warns.** It was declared,
   defaulted, and validated, but read by nothing. Per AbacatePay's own
   documentation the environment is decided by the API key — Dev mode keys
@@ -94,8 +103,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an accepted no-op so existing initializers keep loading.
 - `validate!` no longer rejects unknown `environment` values, and now rejects an
   empty or whitespace-only token.
-- **`required_ruby_version` is now `>= 3.2.0`** (was `>= 2.6.0`). The old floor
-  was never installable: faraday 2.x requires Ruby 3.0 or newer.
 - Releases publish from a `v*` tag instead of every push to `main`, and verify
   that the tag matches `AbacatePay::VERSION` before publishing.
 - Publishing uses RubyGems Trusted Publishing (OIDC) instead of a long-lived API
@@ -110,6 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Abacatepay::Rails` module that does not exist in this codebase — and it was
   shipping inside the published gem, where a type checker would read it.
 
-## [0.1.0] - 2024-12-11
+## [0.1.0] - 2024-12-13
 
 - Initial release
+
+[1.0.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.0.0
+[0.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v0.1.0

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    abacatepay-ruby (0.2.0)
+    abacatepay-ruby (1.0.0)
       faraday (~> 2.14, >= 2.14.3)
 
 GEM
