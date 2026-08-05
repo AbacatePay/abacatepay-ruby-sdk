@@ -52,7 +52,7 @@ module AbacatePay
       end
 
       # Refunds a transparent payment in full. AbacatePay does not support
-      # partial refunds — the original amount is always returned.
+      # partial refunds, the original amount is always returned.
       #
       # @param id [String] Public charge ID (`pix_char_...`, `card_...`, `char_...`)
       # @return [Resources::Transparents] The refunded charge

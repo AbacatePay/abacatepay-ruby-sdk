@@ -76,7 +76,7 @@ RSpec.describe AbacatePay::Clients::WebhookClient do
       expect(sent_body["events"]).to eq(["checkout.completed"])
     end
 
-    # AbacatePay only delivers over HTTPS — failing locally beats a confusing
+    # AbacatePay only delivers over HTTPS, failing locally beats a confusing
     # rejection after the round trip.
     it "rejects a plain HTTP endpoint" do
       expect do

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Client must load first — every other client inherits from it.
+# Client must load first: every other client inherits from it.
 require "abacate_pay/clients/client"
 
 require "abacate_pay/clients/billing_client"

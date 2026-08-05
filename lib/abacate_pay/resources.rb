@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Resource must load first — every other resource inherits from it.
+# Resource must load first: every other resource inherits from it.
 require "abacate_pay/resources/resource"
 
 require "abacate_pay/resources/billings"

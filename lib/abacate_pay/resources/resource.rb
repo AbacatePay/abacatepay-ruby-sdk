@@ -51,7 +51,7 @@ module AbacatePay
         resource_class.new(value)
       end
 
-      # Default value processor — returns the value as-is.
+      # Default value processor, returns the value as-is.
       # Subclasses override this to handle enums, datetimes, and nested resources.
       #
       # @param _property [String] The property name

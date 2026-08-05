@@ -10,7 +10,7 @@ module AbacatePay
     # This class handles API requests using Faraday and provides a way to manage
     # authentication and communication with the AbacatePay service.
     class Client
-      # Statuses worth retrying. 429 is rate limiting and 5xx are transient —
+      # Statuses worth retrying. 429 is rate limiting and 5xx are transient -
       # AbacatePay's own reference tells integrators to back off on both.
       RETRIABLE_STATUSES = [429, 500, 502, 503, 504].freeze
 
@@ -75,7 +75,7 @@ module AbacatePay
       # @param method [String] The HTTP method (e.g., GET, POST)
       # @param uri [String] The endpoint URI relative to the base URI
       # @param options [Hash] Optional settings and parameters for the request
-      # @return [Hash, AbacatePay::Collection] The response data — a Collection
+      # @return [Hash, AbacatePay::Collection] The response data, a Collection
       #   when the API reports pagination, the raw data otherwise
       # @raise [ApiError] If an error occurs during the request
       def request(method, uri, options = {})
@@ -157,7 +157,7 @@ module AbacatePay
           url: base_url,
           headers: build_headers(configuration),
           # Without an explicit timeout a hung gateway blocks the caller's
-          # thread indefinitely — inside a Rails request, that is an outage.
+          # thread indefinitely, inside a Rails request, that is an outage.
           request: {
             timeout: configuration.timeout,
             open_timeout: configuration.timeout

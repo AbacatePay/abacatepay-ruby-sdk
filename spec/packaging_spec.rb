@@ -4,7 +4,7 @@ require "rubygems/package"
 
 # The gemspec builds its file list from `git ls-files`, which only sees tracked
 # files. A newly added source file that nobody remembered to `git add` is
-# silently dropped from the package — and since the manifests require every
+# silently dropped from the package, and since the manifests require every
 # component explicitly, the published gem then raises LoadError on `require`
 # while every test here still passes against the working tree.
 RSpec.describe "Gem packaging" do

@@ -5,7 +5,7 @@ module AbacatePay
     # Deprecated client for the v1 billing endpoints.
     #
     # The endpoints this class calls (`/billings/create`, `/billings/list`) do
-    # not exist on either API version — v2 replaced them with `/checkouts/*`,
+    # not exist on either API version, v2 replaced them with `/checkouts/*`,
     # and v1 uses the singular `/billing/*`. Every call raises ApiError.
     #
     # Kept only so existing code keeps loading; it will be removed in 2.0.0.
@@ -19,7 +19,7 @@ module AbacatePay
       # @deprecated Use {CheckoutClient} instead
       def initialize(client = nil)
         warn "[DEPRECATION] BillingClient calls /billings/* endpoints that do not exist on the " \
-             "AbacatePay API — every request will fail. Use AbacatePay.checkouts instead. " \
+             "AbacatePay API, so every request fails. Use AbacatePay.checkouts instead. " \
              "This class will be removed in 2.0.0."
         super(URI, client)
       end

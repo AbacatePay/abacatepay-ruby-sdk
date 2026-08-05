@@ -4,8 +4,8 @@ module AbacatePay
   module Clients
     # Client for reusable payment links in the AbacatePay API.
     #
-    # A payment link can be paid by many customers independently — mass sales,
-    # raffles, sign-up forms — without creating one checkout per customer.
+    # A payment link can be paid by many customers independently, mass sales,
+    # raffles, sign-up forms, without creating one checkout per customer.
     # Use CheckoutClient when each customer needs their own charge.
     class PaymentLinkClient < Client
       URI = "payment-links"

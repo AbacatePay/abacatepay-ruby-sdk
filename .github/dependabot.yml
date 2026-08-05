@@ -15,7 +15,7 @@ updates:
           - "simplecov*"
           - "bundler-audit"
 
-  # Pinned actions go stale silently — v4 checkout was already deprecated here.
+  # Pinned actions go stale silently, v4 checkout was already deprecated here.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:

@@ -5,7 +5,7 @@ require "stringio"
 RSpec.describe AbacatePay::Configuration do
   subject(:configuration) { described_class.new }
 
-  # The deprecation notice is expected output, not a test failure — capture it
+  # The deprecation notice is expected output, not a test failure, capture it
   # rather than stubbing a method on the object under test.
   def silence_stderr
     original = $stderr
