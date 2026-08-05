@@ -5,7 +5,9 @@ require "openssl"
 RSpec.describe AbacatePay::Webhooks do
   let(:secret) { "test_webhook_secret_123" }
   let(:payload) { '{"event":"checkout.completed","data":{"id":"chk-1"}}' }
-  let(:valid_signature) { OpenSSL::HMAC.hexdigest("SHA256", secret, payload) }
+  # AbacatePay sends the HMAC base64-encoded, not hex. See
+  # https://docs.abacatepay.com/pages/webhooks/security
+  let(:valid_signature) { [OpenSSL::HMAC.digest("SHA256", secret, payload)].pack("m0") }
 
   describe ".verify!" do
     it "returns true for a valid signature" do

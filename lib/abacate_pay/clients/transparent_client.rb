@@ -45,7 +45,9 @@ module AbacatePay
       # @param id [String] QR code ID (dev mode only)
       # @return [Resources::Transparents]
       def simulate_payment(id)
-        response = request("POST", "simulate-payment", json: { id: id })
+        # The API reads the id from the query string here, like #check. Sending
+        # it only in the body fails with "Expected property 'id'".
+        response = request("POST", "simulate-payment", params: { id: id }, json: {})
         Resources::Transparents.new(response)
       end
 

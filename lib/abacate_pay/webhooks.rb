@@ -17,7 +17,12 @@ module AbacatePay
     # Raised when a webhook body is not a JSON object the SDK can interpret.
     class PayloadError < AbacatePay::Error; end
 
-    # Verifies a webhook signature using HMAC-SHA256.
+    # Verifies the `X-Webhook-Signature` header: HMAC-SHA256 over the raw body,
+    # base64-encoded, as specified at
+    # https://docs.abacatepay.com/pages/webhooks/security
+    #
+    # Uses Array#pack rather than the base64 gem, which stopped being a default
+    # gem in Ruby 3.4.
     #
     # @param payload [String] The raw request body
     # @param signature [String] The X-Webhook-Signature header value
@@ -28,7 +33,7 @@ module AbacatePay
       raise SignatureError, "Missing webhook signature" if signature.nil? || signature.to_s.empty?
       raise SignatureError, "Missing webhook secret" if secret.nil? || secret.to_s.empty?
 
-      expected = OpenSSL::HMAC.hexdigest("SHA256", secret.to_s, payload.to_s)
+      expected = [OpenSSL::HMAC.digest("SHA256", secret.to_s, payload.to_s)].pack("m0")
       raise SignatureError, "Invalid webhook signature" unless secure_compare(expected, signature.to_s)
 
       true

@@ -82,7 +82,7 @@ module AbacatePay
         response = @client.public_send(method.downcase) do |req|
           req.url uri
           req.params = options[:params] if options[:params]
-          req.body = options[:json].to_json if options[:json]
+          req.body = compact_payload(options[:json]).to_json if options[:json]
         end
 
         parsed = JSON.parse(response.body)
@@ -98,6 +98,31 @@ module AbacatePay
         raise ApiError, "Malformed API response: #{e.message}"
       rescue KeyError
         raise ApiError, "API response is missing the 'data' field"
+      end
+
+      # Removes nil values from an outgoing payload, at every depth.
+      #
+      # The API rejects explicit nulls: `{"cellphone": null}` comes back as
+      # HTTP 400 "Expected property 'cellphone' to be string but found: null",
+      # and payload builders naturally produce them for optional fields the
+      # caller left unset. Doing this at the boundary means no endpoint, present
+      # or future, can forget it.
+      #
+      # @param payload [Object] The payload about to be serialised
+      # @return [Object] The payload without nil entries
+      def compact_payload(payload)
+        case payload
+        when Hash
+          payload.each_with_object({}) do |(key, value), result|
+            next if value.nil?
+
+            result[key] = compact_payload(value)
+          end
+        when Array
+          payload.compact.map { |item| compact_payload(item) }
+        else
+          payload
+        end
       end
 
       # Maps a list response into resources without losing the page cursor.

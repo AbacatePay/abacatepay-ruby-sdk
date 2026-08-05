@@ -17,10 +17,25 @@ module AbacatePay
                   # API returns — digitable line, viewing URL, and the PIX
                   # fallback issued for the same charge.
                   :due_date, :bar_code, :url, :br_code, :br_code_base64,
-                  :expires_at
+                  :expires_at, :platform_fee, :receipt_url
 
       def initialize(data)
         fill(data)
+      end
+
+      # The API returns the copy-and-paste payload as `brCode` and the image as
+      # `brCodeBase64`. Older documentation used `qrCode`/`qrCodeImage`, so both
+      # spellings are accepted: the reader prefers the `qr*` value when the API
+      # sends one and falls back to `br*`.
+      #
+      # @return [String, nil] PIX copy-and-paste payload
+      def qr_code
+        @qr_code || br_code
+      end
+
+      # @return [String, nil] PIX QR code image as a data URI
+      def qr_code_image
+        @qr_code_image || br_code_base64
       end
 
       def dev_mode?
@@ -47,7 +62,7 @@ module AbacatePay
                   :expires_in, :qr_code, :qr_code_image, :customer,
                   :metadata, :dev_mode, :created_at, :updated_at,
                   :due_date, :bar_code, :url, :br_code, :br_code_base64,
-                  :expires_at
+                  :expires_at, :platform_fee, :receipt_url
     end
   end
 end
