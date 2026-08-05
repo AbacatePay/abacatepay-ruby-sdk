@@ -52,7 +52,7 @@ module AbacatePay
       end
 
       # Changes the main product of an active subscription. The new price takes
-      # effect on the next billing cycle — the current cycle is untouched.
+      # effect on the next billing cycle, the current cycle is untouched.
       #
       # @param id [String] The subscription ID (`subs_...`)
       # @param product_id [String] The new product ID (`prod_...`), which must have a cycle

@@ -45,12 +45,14 @@ module AbacatePay
       # @param id [String] QR code ID (dev mode only)
       # @return [Resources::Transparents]
       def simulate_payment(id)
-        response = request("POST", "simulate-payment", json: { id: id })
+        # The API reads the id from the query string here, like #check. Sending
+        # it only in the body fails with "Expected property 'id'".
+        response = request("POST", "simulate-payment", params: { id: id }, json: {})
         Resources::Transparents.new(response)
       end
 
       # Refunds a transparent payment in full. AbacatePay does not support
-      # partial refunds — the original amount is always returned.
+      # partial refunds, the original amount is always returned.
       #
       # @param id [String] Public charge ID (`pix_char_...`, `card_...`, `char_...`)
       # @return [Resources::Transparents] The refunded charge

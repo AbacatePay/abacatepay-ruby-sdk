@@ -9,8 +9,8 @@ module AbacatePay
   # @api public
   class Configuration
     # The only base URL this SDK speaks. v1 still exists, but under a
-    # different dialect — singular paths (`/v1/billing/`, `/v1/customer/`) and
-    # different resource names (`pixQrCode`) — which this SDK has never
+    # different dialect, singular paths (`/v1/billing/`, `/v1/customer/`) and
+    # different resource names (`pixQrCode`), which this SDK has never
     # implemented. Deriving a base URL from the token prefix only produced 404s
     # against v1 while sending v2-shaped paths.
     API_BASE_URL = "https://api.abacatepay.com/v2"
@@ -43,7 +43,7 @@ module AbacatePay
       @api_token = nil
     end
 
-    # @deprecated The environment is determined by the API key itself — keys
+    # @deprecated The environment is determined by the API key itself, keys
     #   created in Dev mode produce simulated transactions, production keys
     #   produce real ones. This setting has never had any effect and is kept
     #   only so existing initializers keep loading.

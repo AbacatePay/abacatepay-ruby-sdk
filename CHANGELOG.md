@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-05
+
+### Fixed
+
+- **Webhook signature verification rejected every genuine delivery.** The SDK
+  compared against `OpenSSL::HMAC.hexdigest`, but AbacatePay sends the HMAC
+  base64-encoded. The [security
+  spec](https://docs.abacatepay.com/pages/webhooks/security) and its Node,
+  Python and Go samples all use base64. `verify!` therefore failed every real
+  webhook while accepting a hex signature nobody sends, making webhook
+  verification inoperative since it was introduced. Reported by @danieldenis01
+  in #6, found while building a `pay-rails/pay` adapter against the sandbox and
+  production, along with the three fixes above.
+- **`qr_code` and `qr_code_image` always returned nil for transparent PIX.** The
+  API sends the copy-and-paste payload as `brCode` and the image as
+  `brCodeBase64`; the readers looked for the older `qrCode`/`qrCodeImage`
+  spelling. Both are accepted now, preferring `qr*` when present. `platform_fee`
+  and `receipt_url` were missing entirely.
+- **`simulate_payment` sent the id in the body.** The API reads it from the
+  query string on this endpoint, like `check`, and body-only requests fail with
+  "Expected property 'id'".
+- **Optional fields were sent as explicit nulls.** The API rejects
+  `{"cellphone": null}` with HTTP 400 `Expected property 'cellphone' to be
+  string but found: null`, and payload builders emit nils for anything the
+  caller left unset. Payloads are now compacted recursively at the request
+  boundary, so this cannot be forgotten by a future endpoint. Also reported in
+  #6; the fix covers `products`, `coupons`, `payouts`, `pix` and
+  `subscriptions`, which had the same defect.
+
+### Added
+
+- `AbacatePay::Webhooks::PUBLIC_KEY`, the fixed key AbacatePay signs with, now
+  the default for `secret:`. It is public and global, so it proves body
+  integrity only: anyone can compute a valid signature with it.
+- `AbacatePay::Webhooks.verify_secret!(received:, expected:)` for the
+  `webhookSecret` query parameter, which is what actually authenticates the
+  origin. The docs instruct using both mechanisms together; the SDK previously
+  offered only the HMAC half.
+
 ## [1.1.0] - 2026-08-05
 
 ### Added
@@ -19,16 +58,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `br_code_base64` and `expires_at`.
 - **Cursor pagination.** List endpoints cap at 100 items and report `hasMore`
   plus a cursor; the SDK discarded that metadata, making record 101
-  unreachable. `list` now returns an `AbacatePay::Collection` — Enumerable and
-  Array-compatible, so existing code is unaffected — carrying `has_more?` and
-  `next_cursor`. `each_page` and `auto_paging_each` walk every page.
+  unreachable. `list` now returns an `AbacatePay::Collection`. It is Enumerable and
+  Array-compatible, so existing code is unaffected, and it carries `has_more?`
+  and `next_cursor`. `each_page` and `auto_paging_each` walk every page.
 - **Retries with exponential backoff and jitter** on 429 and 5xx, configurable
   via `config.max_retries` (default 2). Only idempotent methods are retried;
   POST never is, because repeating `checkouts/create` after a timeout could
   charge a customer twice and the API exposes no idempotency key.
 - **Optional request logging** via `config.logger`, with the bearer token
   redacted and bodies never logged.
-- `SubscriptionClient#change_plan` and `#record_usage` — the last two of the 45
+- `SubscriptionClient#change_plan` and `#record_usage`: the last two of the 45
   documented v2 endpoints. All 45 are now covered.
 - `subscription.payment_failed` and `subscription.trial_started` webhook event
   types. `payment_failed` is the dunning signal.
@@ -50,9 +89,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Corrected
 
 - The 1.0.0 notes stated that the v1 API "has been retired and answers Not found
-  for every path". That is wrong: v1 is still served, under a different dialect
-  — singular paths (`/v1/billing/`, `/v1/customer/`) and different resource
-  names (`pixQrCode`). The original diagnosis tested v2-shaped paths against
+  for every path". That is wrong: v1 is still served, under a different dialect.
+  It uses singular paths (`/v1/billing/`, `/v1/customer/`) and different
+  resource names (`pixQrCode`). The original diagnosis tested v2-shaped paths against
   `/v1`. The fix itself stands: this SDK only ever spoke v2's dialect, so 10 of
   the 12 paths it calls do not exist on v1 and routing there produced 404s.
 
@@ -65,15 +104,15 @@ versions and will not change without a major bump.
 
 - Full API coverage: checkouts, coupons, customers, payouts, PIX transfers,
   products, store, subscriptions and transparent checkout.
-- `AbacatePay::Webhooks.construct_event` — verifies the signature and parses the
+- `AbacatePay::Webhooks.construct_event`, which verifies the signature and parses the
   body in a single call, so an unverified payload cannot be acted on.
 - `AbacatePay::Webhooks::PayloadError` for malformed or non-object webhook bodies.
-- `PaymentLinkClient` (`AbacatePay.payment_links`) — reusable multi-payment links.
-- `WebhookClient` (`AbacatePay.webhook_endpoints`) — webhook endpoint registration,
+- `PaymentLinkClient` (`AbacatePay.payment_links`) for reusable multi-payment links.
+- `WebhookClient` (`AbacatePay.webhook_endpoints`) for webhook endpoint registration,
   with local HTTPS validation so a bad endpoint fails before the round trip.
-- `CheckoutClient#refund`, `TransparentClient#refund`, `PaymentLinkClient#refund` —
-  refunds were previously impossible through the SDK.
-- `SubscriptionClient#cancel` — a subscription created through the SDK could not
+- `CheckoutClient#refund`, `TransparentClient#refund`, `PaymentLinkClient#refund`.
+  Refunds were previously impossible through the SDK.
+- `SubscriptionClient#cancel`. A subscription created through the SDK could not
   be cancelled through it.
 - CI workflow running the suite on Ruby 3.2, 3.3, 3.4 and 4.0, plus RuboCop, a
   dependency audit and a gem build check on every pull request.
@@ -111,7 +150,7 @@ versions and will not change without a major bump.
   without `X-Webhook-Signature` reached `secure_compare` as `nil` and raised
   `NoMethodError`, so `valid?` returned neither `true` nor `false` and the
   endpoint returned a server error instead of rejecting the request. Missing and
-  empty signatures — and a missing secret — are now `SignatureError`.
+  empty signatures, plus a missing secret, are now `SignatureError`.
 - **`Webhooks.parse` leaked parser internals.** Malformed JSON raised
   `JSON::ParserError` and a non-object JSON body raised `TypeError`; both now
   raise `PayloadError`.
@@ -121,7 +160,7 @@ versions and will not change without a major bump.
 - **Changing the token at runtime had no effect.** Clients were memoized on first
   use and never rebuilt, so `AbacatePay.configure` after a first API call kept
   sending the previous bearer token. `configure` now discards memoized clients.
-- `Configuration#api_url` was declared twice — as an `attr_reader` and as a
+- `Configuration#api_url` was declared twice, as an `attr_reader` and as a
   method. The dead reader has been removed.
 - `CustomerClient#get` and `#delete` had no test coverage at all.
 - The `customer` and `billing` specs stubbed singular endpoint paths while the
@@ -142,13 +181,13 @@ versions and will not change without a major bump.
 ### Changed
 
 - **BREAKING: `required_ruby_version` is now `>= 3.2.0`** (was `>= 2.6.0`). The
-  old floor was never installable — faraday 2.x requires Ruby 3.0 or newer — so
+  old floor was never installable: faraday 2.x requires Ruby 3.0 or newer, so
   no working installation is losing support, but a `bundle update` on Ruby 2.6
   or 3.1 will now refuse to resolve instead of failing later.
 - **`config.environment` is deprecated and now warns.** It was declared,
   defaulted, and validated, but read by nothing. Per AbacatePay's own
-  documentation the environment is decided by the API key — Dev mode keys
-  simulate transactions — so the setting could never have worked. It is kept as
+  documentation the environment is decided by the API key (Dev mode keys
+  simulate transactions), so the setting could never have worked. It is kept as
   an accepted no-op so existing initializers keep loading.
 - `validate!` no longer rejects unknown `environment` values, and now rejects an
   empty or whitespace-only token.
@@ -163,13 +202,14 @@ versions and will not change without a major bump.
 - Publishing to GitHub Packages. The step never executed successfully in any run
   and nothing consumed the gem from that registry.
 - `sig/abacatepay/rails.rbs`. Leftover `bundle gem` scaffolding declaring an
-  `Abacatepay::Rails` module that does not exist in this codebase — and it was
+  `Abacatepay::Rails` module that does not exist in this codebase, and that was
   shipping inside the published gem, where a type checker would read it.
 
 ## [0.1.0] - 2024-12-13
 
 - Initial release
 
+[1.2.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.2.0
 [1.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.0.0
 [0.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v0.1.0

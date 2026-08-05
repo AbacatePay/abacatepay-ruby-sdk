@@ -10,7 +10,7 @@ module AbacatePay
     # This class handles API requests using Faraday and provides a way to manage
     # authentication and communication with the AbacatePay service.
     class Client
-      # Statuses worth retrying. 429 is rate limiting and 5xx are transient —
+      # Statuses worth retrying. 429 is rate limiting and 5xx are transient -
       # AbacatePay's own reference tells integrators to back off on both.
       RETRIABLE_STATUSES = [429, 500, 502, 503, 504].freeze
 
@@ -75,16 +75,11 @@ module AbacatePay
       # @param method [String] The HTTP method (e.g., GET, POST)
       # @param uri [String] The endpoint URI relative to the base URI
       # @param options [Hash] Optional settings and parameters for the request
-      # @return [Hash, AbacatePay::Collection] The response data — a Collection
+      # @return [Hash, AbacatePay::Collection] The response data, a Collection
       #   when the API reports pagination, the raw data otherwise
       # @raise [ApiError] If an error occurs during the request
       def request(method, uri, options = {})
-        response = @client.public_send(method.downcase) do |req|
-          req.url uri
-          req.params = options[:params] if options[:params]
-          req.body = options[:json].to_json if options[:json]
-        end
-
+        response = send_request(method, uri, options)
         parsed = JSON.parse(response.body)
         raise ApiError, "API error: #{parsed["error"]}" if parsed["error"]
 
@@ -98,6 +93,45 @@ module AbacatePay
         raise ApiError, "Malformed API response: #{e.message}"
       rescue KeyError
         raise ApiError, "API response is missing the 'data' field"
+      end
+
+      # Issues the HTTP call.
+      #
+      # @param method [String] The HTTP method
+      # @param uri [String] The endpoint URI relative to the base URI
+      # @param options [Hash] Params and JSON body
+      # @return [Faraday::Response]
+      def send_request(method, uri, options)
+        @client.public_send(method.downcase) do |req|
+          req.url uri
+          req.params = options[:params] if options[:params]
+          req.body = compact_payload(options[:json]).to_json if options[:json]
+        end
+      end
+
+      # Removes nil values from an outgoing payload, at every depth.
+      #
+      # The API rejects explicit nulls: `{"cellphone": null}` comes back as
+      # HTTP 400 "Expected property 'cellphone' to be string but found: null",
+      # and payload builders naturally produce them for optional fields the
+      # caller left unset. Doing this at the boundary means no endpoint, present
+      # or future, can forget it.
+      #
+      # @param payload [Object] The payload about to be serialised
+      # @return [Object] The payload without nil entries
+      def compact_payload(payload)
+        case payload
+        when Hash
+          payload.each_with_object({}) do |(key, value), result|
+            next if value.nil?
+
+            result[key] = compact_payload(value)
+          end
+        when Array
+          payload.compact.map { |item| compact_payload(item) }
+        else
+          payload
+        end
       end
 
       # Maps a list response into resources without losing the page cursor.
@@ -123,7 +157,7 @@ module AbacatePay
           url: base_url,
           headers: build_headers(configuration),
           # Without an explicit timeout a hung gateway blocks the caller's
-          # thread indefinitely — inside a Rails request, that is an outage.
+          # thread indefinitely, inside a Rails request, that is an outage.
           request: {
             timeout: configuration.timeout,
             open_timeout: configuration.timeout

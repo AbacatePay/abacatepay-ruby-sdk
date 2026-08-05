@@ -14,7 +14,7 @@ module AbacatePay
         SUBSCRIPTION_RENEWED = "subscription.renewed"
         SUBSCRIPTION_CANCELLED = "subscription.cancelled"
 
-        # Recurring charge failed — the dunning signal. Without handling this,
+        # Recurring charge failed, the dunning signal. Without handling this,
         # a failing subscription looks identical to a healthy one.
         SUBSCRIPTION_PAYMENT_FAILED = "subscription.payment_failed"
 

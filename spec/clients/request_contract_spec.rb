@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # The other client specs inject a hand-built Faraday connection, so they never
-# exercise Client#build_client — the code that decides the real URL, the auth
+# exercise Client#build_client, the code that decides the real URL, the auth
 # header and the timeout. A wrong endpoint path would leave every one of them
 # green while the SDK 404s against the live API.
 #
@@ -97,7 +97,7 @@ RSpec.describe "Client request contract" do
   # ── API base path ─────────────────────────────────────────────────────────
   #
   # The SDK used to derive v1/v2 from the token prefix and fell back to v1 for
-  # anything unrecognised — while still sending v2-shaped paths. v1 uses a
+  # anything unrecognised, while still sending v2-shaped paths. v1 uses a
   # different dialect (`/v1/billing/`, `/v1/customer/`, `pixQrCode`), so 10 of
   # the 12 paths this SDK calls do not exist there and every such call 404'd.
   # There is one base path now.

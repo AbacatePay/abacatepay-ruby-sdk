@@ -14,7 +14,7 @@ module AbacatePay
         # @return [String] Credit card payment
         CARD = "CARD"
 
-        # Boleto bancário. Supports a due date and late-payment interest/fine —
+        # Boleto bancário. Supports a due date and late-payment interest/fine -
         # see Resources::Checkouts#due_date, #interest and #fine.
         # @return [String] Boleto payment method
         BOLETO = "BOLETO"

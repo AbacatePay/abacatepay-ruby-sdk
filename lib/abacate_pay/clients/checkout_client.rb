@@ -35,7 +35,7 @@ module AbacatePay
       end
 
       # Refunds a paid checkout in full. AbacatePay does not support partial
-      # refunds — the original amount is always returned.
+      # refunds, the original amount is always returned.
       #
       # @param id [String] Public checkout ID (`bill_...`) or charge ID
       #   (`char_...`, `pix_char_...`, `card_...`)

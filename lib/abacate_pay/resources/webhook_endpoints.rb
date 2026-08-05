@@ -4,7 +4,7 @@ module AbacatePay
   module Resources
     # Represents a registered webhook endpoint in the AbacatePay system.
     #
-    # This is the endpoint *registration* — the URL AbacatePay delivers events
+    # This is the endpoint *registration*, the URL AbacatePay delivers events
     # to. For verifying and parsing an inbound delivery, see {AbacatePay::Webhooks}.
     class WebhookEndpoints < Resource
       # @return [String, nil] Webhook ID

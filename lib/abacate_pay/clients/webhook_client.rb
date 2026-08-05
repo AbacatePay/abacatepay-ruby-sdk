@@ -32,7 +32,7 @@ module AbacatePay
 
       # Registers a new webhook endpoint.
       #
-      # The secret is what AbacatePay signs deliveries with — pass the same
+      # The secret is what AbacatePay signs deliveries with, pass the same
       # value to {AbacatePay::Webhooks.construct_event} when handling them.
       #
       # @param name [String] Identifying name

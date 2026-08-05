@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# BOLETO is a first-class method in the v2 API — more prominent than CARD in
-# the reference — and the SDK rejected it outright until 1.1.0.
+# BOLETO is a first-class method in the v2 API, more prominent than CARD in
+# the reference, and the SDK rejected it outright until 1.1.0.
 RSpec.describe "Boleto support" do
   let(:stubs) { Faraday::Adapter::Test::Stubs.new }
 
