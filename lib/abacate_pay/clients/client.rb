@@ -79,12 +79,7 @@ module AbacatePay
       #   when the API reports pagination, the raw data otherwise
       # @raise [ApiError] If an error occurs during the request
       def request(method, uri, options = {})
-        response = @client.public_send(method.downcase) do |req|
-          req.url uri
-          req.params = options[:params] if options[:params]
-          req.body = compact_payload(options[:json]).to_json if options[:json]
-        end
-
+        response = send_request(method, uri, options)
         parsed = JSON.parse(response.body)
         raise ApiError, "API error: #{parsed["error"]}" if parsed["error"]
 
@@ -98,6 +93,20 @@ module AbacatePay
         raise ApiError, "Malformed API response: #{e.message}"
       rescue KeyError
         raise ApiError, "API response is missing the 'data' field"
+      end
+
+      # Issues the HTTP call.
+      #
+      # @param method [String] The HTTP method
+      # @param uri [String] The endpoint URI relative to the base URI
+      # @param options [Hash] Params and JSON body
+      # @return [Faraday::Response]
+      def send_request(method, uri, options)
+        @client.public_send(method.downcase) do |req|
+          req.url uri
+          req.params = options[:params] if options[:params]
+          req.body = compact_payload(options[:json]).to_json if options[:json]
+        end
       end
 
       # Removes nil values from an outgoing payload, at every depth.

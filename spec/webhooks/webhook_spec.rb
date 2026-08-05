@@ -5,7 +5,7 @@ require "openssl"
 RSpec.describe AbacatePay::Webhooks do
   let(:secret) { "test_webhook_secret_123" }
   let(:payload) { '{"event":"checkout.completed","data":{"id":"chk-1"}}' }
-  # AbacatePay sends the HMAC base64-encoded, not hex. See
+  # AbacatePay sends the HMAC base64-encoded, not hex, see
   # https://docs.abacatepay.com/pages/webhooks/security
   let(:valid_signature) { [OpenSSL::HMAC.digest("SHA256", secret, payload)].pack("m0") }
 
@@ -68,7 +68,7 @@ RSpec.describe AbacatePay::Webhooks do
       ).to be false
     end
 
-    # Documented as returning a Boolean — it must never raise for hostile input.
+    # Documented as returning a Boolean, it must never raise for hostile input.
     it "returns false when the signature header is absent" do
       expect(
         described_class.valid?(payload: payload, signature: nil, secret: secret)
@@ -114,6 +114,54 @@ RSpec.describe AbacatePay::Webhooks do
       expect do
         described_class.parse("")
       end.to raise_error(AbacatePay::Webhooks::PayloadError)
+    end
+  end
+
+  # The SDK compared against OpenSSL::HMAC.hexdigest until 1.2.0, so it rejected
+  # every genuine delivery while still accepting a hex signature nobody sends.
+  describe "signature encoding" do
+    it "accepts the base64 signature AbacatePay actually sends" do
+      expect(described_class.valid?(payload: payload, signature: valid_signature, secret: secret)).to be true
+    end
+
+    it "rejects the hex encoding the SDK used to expect" do
+      hex = OpenSSL::HMAC.hexdigest("SHA256", secret, payload)
+
+      expect(described_class.valid?(payload: payload, signature: hex, secret: secret)).to be false
+    end
+
+    it "defaults to AbacatePay's published public key" do
+      signed = [OpenSSL::HMAC.digest("SHA256", described_class::PUBLIC_KEY, payload)].pack("m0")
+
+      expect(described_class.valid?(payload: payload, signature: signed)).to be true
+    end
+  end
+
+  # The public key is global and non-secret, so the HMAC proves body integrity
+  # only. The query-parameter secret is what authenticates the origin.
+  describe ".verify_secret!" do
+    it "accepts a matching secret" do
+      expect(described_class.verify_secret!(received: "s3cr3t", expected: "s3cr3t")).to be true
+    end
+
+    it "rejects a different secret" do
+      expect { described_class.verify_secret!(received: "wrong", expected: "s3cr3t") }
+        .to raise_error(AbacatePay::Webhooks::SignatureError, /Invalid webhook secret/)
+    end
+
+    it "rejects a missing query parameter" do
+      expect { described_class.verify_secret!(received: nil, expected: "s3cr3t") }
+        .to raise_error(AbacatePay::Webhooks::SignatureError, /Missing webhook secret parameter/)
+    end
+
+    it "rejects an unconfigured expected secret" do
+      expect { described_class.verify_secret!(received: "s3cr3t", expected: nil) }
+        .to raise_error(AbacatePay::Webhooks::SignatureError, /Missing expected webhook secret/)
+    end
+
+    it "rejects a secret of a different length without leaking timing" do
+      expect { described_class.verify_secret!(received: "s3cr3t_extra", expected: "s3cr3t") }
+        .to raise_error(AbacatePay::Webhooks::SignatureError)
     end
   end
 

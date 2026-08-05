@@ -58,6 +58,7 @@ Naming/MethodParameterName:
 Naming/PredicateMethod:
   AllowedMethods:
     - verify!
+    - verify_secret!
 
 # Faraday errors carry a response payload, not just a message; the compact
 # form is how Faraday itself documents constructing them.

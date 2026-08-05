@@ -8,7 +8,7 @@ O [`abacatepay-ruby`](https://rubygems.org/gems/abacatepay-ruby) é um **wrapper
 
 <img src="https://res.cloudinary.com/dkok1obj5/image/upload/v1767631413/avo_clhmaf.png" width="100%" alt="AbacatePay Open Source"/>
 
-Funciona em qualquer aplicação Ruby — Rails, Sinatra, Hanami ou Ruby puro.
+Funciona em qualquer aplicação Ruby: Rails, Sinatra, Hanami ou Ruby puro.
 
 Referência completa da API [aqui](https://abacatepay.readme.io/reference).
 
@@ -56,7 +56,7 @@ Nunca utilize sua API key diretamente no código.
 
 Em Rails, coloque isso em `config/initializers/abacatepay.rb`.
 
-Trocar o token em runtime tem efeito imediato — os clients são reconstruídos a cada `configure`.
+Trocar o token em runtime tem efeito imediato: os clients são reconstruídos a cada `configure`.
 
 ### Criando uma cobrança
 
@@ -103,7 +103,7 @@ AbacatePay.checkouts.list(status: 'PAID', email: 'user@example.com')
 
 <div align="center">
 
-Listas retornam no máximo 100 itens. O resultado é uma `Collection` — funciona como Array, e ainda carrega o cursor:
+Listas retornam no máximo 100 itens. O resultado é uma `Collection`, que funciona como Array e ainda carrega o cursor:
 
 </div>
 
@@ -122,17 +122,17 @@ AbacatePay.customers.each_page { |page| puts page.size }
 
 ## Versionamento
 
-O SDK fala **exclusivamente a v2** — `https://api.abacatepay.com/v2`. A v1 ainda existe para integrações legadas, mas usa outro dialeto (caminhos no singular como `/v1/billing/`, `/v1/customer/`) que este SDK nunca implementou. Se você precisa da v1, chame a API diretamente.
+O SDK fala **exclusivamente a v2**, em `https://api.abacatepay.com/v2`. A v1 ainda existe para integrações legadas, mas usa outro dialeto (caminhos no singular como `/v1/billing/`, `/v1/customer/`) que este SDK nunca implementou. Se você precisa da v1, chame a API diretamente.
 
-O ambiente (dev mode x produção) é definido **pela chave de API**, não por configuração: chaves de Dev mode geram transações simuladas. Por isso `config.environment` não faz nada — ela continua aceita para não quebrar initializers existentes, mas emite aviso de depreciação.
+O ambiente (dev mode x produção) é definido **pela chave de API**, não por configuração: chaves de Dev mode geram transações simuladas. Por isso `config.environment` não faz nada. Ela continua aceita para não quebrar initializers existentes, mas emite aviso de depreciação.
 
-O `BillingClient` também está descontinuado, substituído pelo `CheckoutClient`. Seus endpoints `/billings/*` não existem em nenhuma versão da API — toda chamada falha. Será removido na 2.0.0:
+O `BillingClient` também está descontinuado, substituído pelo `CheckoutClient`. Seus endpoints `/billings/*` não existem em nenhuma versão da API: toda chamada falha. Será removido na 2.0.0:
 
 </div>
 
 ```
 [DEPRECATION] BillingClient calls /billings/* endpoints that do not exist on the
-AbacatePay API — every request will fail. Use AbacatePay.checkouts instead.
+AbacatePay API, every request will fail. Use AbacatePay.checkouts instead.
 This class will be removed in 2.0.0.
 ```
 
@@ -140,7 +140,7 @@ This class will be removed in 2.0.0.
 
 ## Tratamento de erros
 
-Diferente do SDK de Node, **este SDK levanta exceções** — ele não retorna `{ data, error, success }`. Toda falha vira uma exceção tipada que herda de `AbacatePay::Error`, então você pode capturar tudo de uma vez ou tratar caso a caso.
+Diferente do SDK de Node, **este SDK levanta exceções**. Ele não retorna `{ data, error, success }`. Toda falha vira uma exceção tipada que herda de `AbacatePay::Error`, então você pode capturar tudo de uma vez ou tratar caso a caso.
 
 </div>
 
@@ -168,18 +168,26 @@ Erros de rede e timeout são normalizados para `ApiError`, com a mensagem da API
 
 ## Webhooks
 
-Endpoints de webhook são públicos e não autenticados. Use `construct_event`, que **verifica a assinatura antes de fazer o parse** — é o único ponto de entrada que não permite agir sobre um payload não verificado.
+Endpoints de webhook são públicos. A AbacatePay usa **dois mecanismos**, e a documentação orienta usar os dois: o `webhookSecret` na query autentica a origem, e a assinatura HMAC garante que o corpo não foi alterado. A chave HMAC é pública e global: ela sozinha não prova origem.
 
 </div>
 
 ```ruby
 payload   = request.body.read
 signature = request.headers['X-Webhook-Signature']
-secret    = ENV['ABACATEPAY_WEBHOOK_SECRET']
 
 begin
+  # 1. Autentica a origem com o secret que você definiu ao criar o webhook,
+  #    enviado pela AbacatePay como query parameter.
+  AbacatePay::Webhooks.verify_secret!(
+    received: params[:webhookSecret],
+    expected: ENV['ABACATEPAY_WEBHOOK_SECRET']
+  )
+
+  # 2. Verifica a integridade do corpo. A chave HMAC é pública, então este
+  #    passo sozinho não prova origem. Por isso os dois juntos.
   event = AbacatePay::Webhooks.construct_event(
-    payload: payload, signature: signature, secret: secret
+    payload: payload, signature: signature
   )
 rescue AbacatePay::Webhooks::SignatureError
   return head :unauthorized
@@ -196,7 +204,7 @@ end
 
 <div align="center">
 
-Header ausente, secret vazio, assinatura forjada e corpo malformado são todos tratados como casos esperados — levantam erro tipado em vez de derrubar o endpoint. A comparação de assinatura é feita em tempo constante.
+Header ausente, secret vazio, assinatura forjada e corpo malformado são todos tratados como casos esperados: levantam erro tipado em vez de derrubar o endpoint. A comparação de assinatura é feita em tempo constante.
 
 Os métodos de baixo nível continuam disponíveis:
 
@@ -206,7 +214,7 @@ Os métodos de baixo nível continuam disponíveis:
 # Levanta SignatureError se a assinatura estiver ausente ou inválida
 AbacatePay::Webhooks.verify!(payload: payload, signature: signature, secret: secret)
 
-# Contraparte booleana — nunca levanta exceção
+# Contraparte booleana. Nunca levanta exceção
 AbacatePay::Webhooks.valid?(payload: payload, signature: signature, secret: secret)
 
 # Faz parse de um corpo já verificado
@@ -406,7 +414,7 @@ AbacatePay.checkouts.create(
 
 <div align="center">
 
-No checkout transparente, o boleto exige nome e CPF/CNPJ do pagador — o SDK valida antes de chamar a API:
+No checkout transparente, o boleto exige nome e CPF/CNPJ do pagador, o SDK valida antes de chamar a API:
 
 </div>
 
@@ -444,7 +452,7 @@ AbacatePay.checkouts.create(
 
 ### Links de pagamento
 
-Um link reutilizável, pago por vários clientes de forma independente — vendas em massa, rifas, formulários de inscrição. Para uma cobrança por cliente, use `checkouts`.
+Um link reutilizável, pago por vários clientes de forma independente, vendas em massa, rifas, formulários de inscrição. Para uma cobrança por cliente, use `checkouts`.
 
 </div>
 
@@ -466,7 +474,7 @@ puts link.url # compartilhe esta URL
 
 ### Estornos
 
-O estorno é sempre integral — a AbacatePay não faz estorno parcial.
+O estorno é sempre integral, a AbacatePay não faz estorno parcial.
 
 </div>
 
@@ -487,10 +495,10 @@ Cancela imediatamente; parcelas futuras pendentes são canceladas junto.
 ```ruby
 AbacatePay.subscriptions.cancel('subs_abc123xyz')
 
-# Upgrade/downgrade — vale a partir do próximo ciclo
+# Upgrade/downgrade, vale a partir do próximo ciclo
 AbacatePay.subscriptions.change_plan('subs_abc123xyz', product_id: 'prod_pro', quantity: 1)
 
-# Cobrança por uso — produto sem ciclo
+# Cobrança por uso, produto sem ciclo
 AbacatePay.subscriptions.record_usage('subs_abc123xyz', product_id: 'prod_api', units: 50)
 ```
 
@@ -533,7 +541,7 @@ AbacatePay.store.revenue(start_date: '2026-01-01', end_date: '2026-03-30')
 
 ## Enums
 
-Os valores são validados na construção do recurso — um valor inválido levanta `ArgumentError` antes de qualquer chamada de rede.
+Os valores são validados na construção do recurso, um valor inválido levanta `ArgumentError` antes de qualquer chamada de rede.
 
 | Enum | Valores |
 |---|---|
@@ -560,7 +568,7 @@ bundle exec rake        # specs + rubocop
 
 <div align="center">
 
-Antes de abrir um PR, garanta que `bundle exec rake` passa e que a cobertura não caiu — o CI roda os specs em Ruby 3.2, 3.3, 3.4 e 4.0, mais RuboCop, auditoria de dependências e build do gem.
+Antes de abrir um PR, garanta que `bundle exec rake` passa e que a cobertura não caiu, o CI roda os specs em Ruby 3.2, 3.3, 3.4 e 4.0, mais RuboCop, auditoria de dependências e build do gem.
 
 ## Licença
 
