@@ -83,3 +83,54 @@ jobs:
 
       - name: Push gem
         run: gem push abacatepay-ruby-*.gem
+
+  github_release:
+    name: Publish GitHub Release
+    # Only after the gem is on RubyGems, so a release never announces a version
+    # nobody can install.
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Creating a release writes to the repository.
+      contents: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # Attached so the gem can be installed without going through RubyGems.
+      - name: Build gem
+        run: gem build abacatepay-ruby.gemspec
+
+      # The section for this version in CHANGELOG.md becomes the release notes,
+      # so the two can never drift apart.
+      - name: Extract release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { collecting = 1; next }
+            collecting && /^## \[/   { exit }
+            collecting               { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::No CHANGELOG.md section found for ${version}"
+            exit 1
+          fi
+          echo "Release notes for ${version}:"
+          cat release-notes.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag \
+            abacatepay-ruby-*.gem
