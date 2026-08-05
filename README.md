@@ -126,12 +126,14 @@ O SDK fala **exclusivamente a v2** — `https://api.abacatepay.com/v2`. A v1 ain
 
 O ambiente (dev mode x produção) é definido **pela chave de API**, não por configuração: chaves de Dev mode geram transações simuladas. Por isso `config.environment` não faz nada — ela continua aceita para não quebrar initializers existentes, mas emite aviso de depreciação.
 
-O `BillingClient` também está descontinuado, substituído pelo `CheckoutClient`. Ele emite um aviso ao ser instanciado, e seus endpoints `/billings/*` não existem na v2:
+O `BillingClient` também está descontinuado, substituído pelo `CheckoutClient`. Seus endpoints `/billings/*` não existem em nenhuma versão da API — toda chamada falha. Será removido na 2.0.0:
 
 </div>
 
 ```
-[DEPRECATION] BillingClient is deprecated. Use CheckoutClient instead.
+[DEPRECATION] BillingClient calls /billings/* endpoints that do not exist on the
+AbacatePay API — every request will fail. Use AbacatePay.checkouts instead.
+This class will be removed in 2.0.0.
 ```
 
 <div align="center">
@@ -219,7 +221,7 @@ AbacatePay::Webhooks.parse(payload)
 |---|---|
 | Checkout | `checkout.completed`, `checkout.refunded`, `checkout.disputed` |
 | Transparent | `transparent.completed`, `transparent.refunded`, `transparent.disputed` |
-| Subscription | `subscription.completed`, `subscription.renewed`, `subscription.cancelled` |
+| Subscription | `subscription.completed`, `subscription.renewed`, `subscription.cancelled`, `subscription.payment_failed`, `subscription.trial_started` |
 | Transfer | `transfer.completed`, `transfer.failed` |
 | Payout | `payout.completed`, `payout.failed` |
 
