@@ -5,15 +5,15 @@ RSpec.describe AbacatePay::Resources::Coupons do
     context "with API data" do
       let(:coupon) do
         described_class.new({
-          "id" => "coup-1",
-          "code" => "SAVE20",
-          "discount" => 20,
-          "discountKind" => "PERCENTAGE",
-          "maxRedeems" => 100,
-          "currentRedeems" => 5,
-          "status" => "ACTIVE",
-          "createdAt" => "2026-01-15T10:00:00Z"
-        })
+                              "id" => "coup-1",
+                              "code" => "SAVE20",
+                              "discount" => 20,
+                              "discountKind" => "PERCENTAGE",
+                              "maxRedeems" => 100,
+                              "currentRedeems" => 5,
+                              "status" => "ACTIVE",
+                              "createdAt" => "2026-01-15T10:00:00Z"
+                            })
       end
 
       it("sets id") { expect(coupon.id).to eq("coup-1") }

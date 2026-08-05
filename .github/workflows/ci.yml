@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+# A newer push to the same branch makes the in-flight run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (Ruby ${{ matrix.ruby }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every version the gemspec claims to support must actually be exercised.
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby ${{ matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Run specs
+        run: bundle exec rspec
+
+  lint:
+    name: RuboCop
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --format github
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # Fails the build on any dependency with a known CVE.
+      - name: Audit dependencies
+        run: |
+          bundle exec bundle-audit update
+          bundle exec bundle-audit check
+
+  build:
+    name: Build gem
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # Catches gemspec breakage (bad file list, unloadable version file) on the
+      # PR rather than at release time, which is how v0.1.1 was lost.
+      - name: Build gem
+        run: gem build abacatepay-ruby.gemspec

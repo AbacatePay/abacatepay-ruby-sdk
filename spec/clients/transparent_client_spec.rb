@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/transparents/list") do
+      stubs.get("/v2/transparents/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "tr-1", "amount" => 500 }] }.to_json]
       end
@@ -26,7 +26,7 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/transparents/create") do
+      stubs.post("/v2/transparents/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "tr-new", "qrCode" => "00020126..." } }.to_json]
       end
@@ -42,7 +42,7 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "#check" do
     before do
-      stubs.get("/v1/transparents/check") do
+      stubs.get("/v2/transparents/check") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "tr-1", "status" => "PAID" } }.to_json]
       end
@@ -57,7 +57,7 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "#simulate_payment" do
     before do
-      stubs.post("/v1/transparents/simulate-payment") do
+      stubs.post("/v2/transparents/simulate-payment") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "tr-1", "status" => "PAID" } }.to_json]
       end
@@ -71,11 +71,24 @@ RSpec.describe AbacatePay::Clients::TransparentClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/transparents/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/transparents/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do
       expect { client.list }.to raise_error(AbacatePay::ApiError)
+    end
+  end
+
+  describe "#refund" do
+    before do
+      stubs.post("/v2/transparents/refund") do
+        [200, { "Content-Type" => "application/json" },
+         { "data" => { "id" => "pix_char-1", "status" => "REFUNDED" } }.to_json]
+      end
+    end
+
+    it "returns the refunded charge" do
+      expect(client.refund("pix_char-1").status).to eq("REFUNDED")
     end
   end
 end

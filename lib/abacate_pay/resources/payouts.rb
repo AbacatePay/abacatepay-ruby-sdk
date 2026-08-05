@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a payout (withdrawal) in the AbacatePay system.
     class Payouts < Resource
       ENUM_PROPERTIES = {
         status: "AbacatePay::Enums::Payouts::Statuses"

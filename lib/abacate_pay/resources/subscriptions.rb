@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a recurring subscription in the AbacatePay system.
     class Subscriptions < Resource
       RESOURCE_PROPERTIES = {
         customer: "AbacatePay::Resources::Customers",

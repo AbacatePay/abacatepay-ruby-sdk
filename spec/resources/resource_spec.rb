@@ -199,7 +199,7 @@ RSpec.describe AbacatePay::Resources::Resource do
       obj = test_class.new
       obj.created_at = DateTime.new(2024, 1, 15, 10, 30, 0)
       hash = obj.to_hash
-      expect(hash["createdAt"]).to match(/2024-01-15/)
+      expect(hash["createdAt"]).to include("2024-01-15")
     end
   end
 end

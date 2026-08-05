@@ -9,7 +9,7 @@ module AbacatePay
     class Customers < Resource
       # Maps property names to their corresponding resource classes
       RESOURCE_PROPERTIES = {
-        metadata: 'AbacatePay::Resources::Customers::Metadata'
+        metadata: "AbacatePay::Resources::Customers::Metadata"
       }.freeze
 
       # @return [String, nil] The unique identifier for the customer

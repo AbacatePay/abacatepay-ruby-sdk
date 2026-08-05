@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/checkouts/list") do
+      stubs.get("/v2/checkouts/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "chk-1", "amount" => 1000, "status" => "PAID" }] }.to_json]
       end
@@ -30,7 +30,7 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
 
   describe "#get" do
     before do
-      stubs.get("/v1/checkouts/get") do
+      stubs.get("/v2/checkouts/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "chk-1", "url" => "https://pay.abacatepay.com/chk-1" } }.to_json]
       end
@@ -45,7 +45,7 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/checkouts/create") do
+      stubs.post("/v2/checkouts/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "chk-new", "amount" => 5000, "url" => "https://pay.abacatepay.com/chk-new" } }.to_json]
       end
@@ -53,14 +53,12 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
 
     it "with customer ID returns a Checkouts resource" do
       checkout = AbacatePay::Resources::Checkouts.new({
-        "frequency" => "ONE_TIME",
-        "methods" => ["PIX"]
-      })
-      checkout.instance_variable_set(:@products, [
-        AbacatePay::Resources::Billings::Product.new({
-          "externalId" => "prod-1", "name" => "Item", "price" => 5000, "quantity" => 1
-        })
-      ])
+                                                        "frequency" => "ONE_TIME",
+                                                        "methods" => ["PIX"]
+                                                      })
+      attributes = { "externalId" => "prod-1", "name" => "Item", "price" => 5000, "quantity" => 1 }
+      product = AbacatePay::Resources::Billings::Product.new(attributes)
+      checkout.instance_variable_set(:@products, [product])
       customer = AbacatePay::Resources::Customers.new({ "id" => "cust-1" })
       checkout.instance_variable_set(:@customer, customer)
 
@@ -71,9 +69,9 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
 
     it "with inline customer returns a Checkouts resource" do
       checkout = AbacatePay::Resources::Checkouts.new({
-        "frequency" => "ONE_TIME",
-        "methods" => ["PIX"]
-      })
+                                                        "frequency" => "ONE_TIME",
+                                                        "methods" => ["PIX"]
+                                                      })
       customer = AbacatePay::Resources::Customers.new({})
       metadata = AbacatePay::Resources::Customers::Metadata.new({})
       metadata.name = "John"
@@ -86,9 +84,22 @@ RSpec.describe AbacatePay::Clients::CheckoutClient do
     end
   end
 
+  describe "#refund" do
+    before do
+      stubs.post("/v2/checkouts/refund") do
+        [200, { "Content-Type" => "application/json" },
+         { "data" => { "id" => "chk-1", "status" => "REFUNDED" } }.to_json]
+      end
+    end
+
+    it "returns the refunded checkout" do
+      expect(client.refund("chk-1").status).to eq("REFUNDED")
+    end
+  end
+
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/checkouts/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/checkouts/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::PayoutClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/payouts/list") do
+      stubs.get("/v2/payouts/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "pay-1", "amount" => 5000, "status" => "COMPLETE" }] }.to_json]
       end
@@ -26,7 +26,7 @@ RSpec.describe AbacatePay::Clients::PayoutClient do
 
   describe "#get" do
     before do
-      stubs.get("/v1/payouts/get") do
+      stubs.get("/v2/payouts/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "pay-1", "amount" => 5000 } }.to_json]
       end
@@ -41,7 +41,7 @@ RSpec.describe AbacatePay::Clients::PayoutClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/payouts/create") do
+      stubs.post("/v2/payouts/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "pay-new", "status" => "PENDING" } }.to_json]
       end
@@ -49,8 +49,8 @@ RSpec.describe AbacatePay::Clients::PayoutClient do
 
     it "returns a Payouts resource" do
       payout = AbacatePay::Resources::Payouts.new({
-        "amount" => 5000, "externalId" => "ext-1"
-      })
+                                                    "amount" => 5000, "externalId" => "ext-1"
+                                                  })
       result = client.create(payout)
       expect(result).to be_a(AbacatePay::Resources::Payouts)
       expect(result.id).to eq("pay-new")
@@ -59,7 +59,7 @@ RSpec.describe AbacatePay::Clients::PayoutClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/payouts/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/payouts/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

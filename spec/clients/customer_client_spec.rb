@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Clients::CustomerClient do
   let(:stubs) { Faraday::Adapter::Test::Stubs.new }
   let(:faraday_client) do
-    Faraday.new(url: "#{AbacatePay.configuration.api_url}/customer/") do |f|
+    Faraday.new(url: "#{AbacatePay.configuration.api_url}/customers/") do |f|
       f.adapter :test, stubs
     end
   end
@@ -20,7 +20,7 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
     end
 
     before do
-      stubs.get("/v1/customer/list") do
+      stubs.get("/v2/customers/list") do
         [200, { "Content-Type" => "application/json" }, { "data" => customer_data }.to_json]
       end
     end
@@ -34,9 +34,7 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
     end
 
     it "returns Customers resource instances" do
-      client.list.each do |customer|
-        expect(customer).to be_a(AbacatePay::Resources::Customers)
-      end
+      expect(client.list).to all(be_a(AbacatePay::Resources::Customers))
     end
 
     it "maps customer id correctly" do
@@ -46,7 +44,7 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
 
   describe "#list when the API returns an empty array" do
     before do
-      stubs.get("/v1/customer/list") do
+      stubs.get("/v2/customers/list") do
         [200, { "Content-Type" => "application/json" }, { "data" => [] }.to_json]
       end
     end
@@ -58,7 +56,7 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
 
   describe "#list when the API returns an error" do
     before do
-      stubs.get("/v1/customer/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/customers/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do
@@ -70,13 +68,6 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
 
   describe "#create" do
     let(:response_data) { { "id" => "cust-new" } }
-
-    before do
-      stubs.post("/v1/customer/create") do
-        [200, { "Content-Type" => "application/json" }, { "data" => response_data }.to_json]
-      end
-    end
-
     let(:customer_input) do
       customer = AbacatePay::Resources::Customers.new({})
       metadata = AbacatePay::Resources::Customers::Metadata.new({})
@@ -86,6 +77,12 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
       metadata.tax_id = "000.111.222-33"
       customer.instance_variable_set(:@metadata, metadata)
       customer
+    end
+
+    before do
+      stubs.post("/v2/customers/create") do
+        [200, { "Content-Type" => "application/json" }, { "data" => response_data }.to_json]
+      end
     end
 
     it "returns a Customers resource" do
@@ -100,12 +97,54 @@ RSpec.describe AbacatePay::Clients::CustomerClient do
 
   describe "#create when the API returns an error" do
     before do
-      stubs.post("/v1/customer/create") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.post("/v2/customers/create") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do
       customer = AbacatePay::Resources::Customers.new({})
       expect { client.create(customer) }.to raise_error(AbacatePay::ApiError)
+    end
+  end
+
+  # ── get ───────────────────────────────────────────────────────────────────
+
+  describe "#get" do
+    before do
+      stubs.get("/v2/customers/get") do
+        [200, { "Content-Type" => "application/json" },
+         { "data" => { "id" => "cust-42", "metadata" => { "name" => "Ana" } } }.to_json]
+      end
+    end
+
+    it "returns a Customers resource" do
+      expect(client.get("cust-42")).to be_a(AbacatePay::Resources::Customers)
+    end
+
+    it "maps the customer id" do
+      expect(client.get("cust-42").id).to eq("cust-42")
+    end
+
+    it "maps nested metadata" do
+      expect(client.get("cust-42").metadata.name).to eq("Ana")
+    end
+  end
+
+  # ── delete ────────────────────────────────────────────────────────────────
+
+  describe "#delete" do
+    before do
+      stubs.post("/v2/customers/delete") do
+        [200, { "Content-Type" => "application/json" },
+         { "data" => { "id" => "cust-42" } }.to_json]
+      end
+    end
+
+    it "returns a Customers resource" do
+      expect(client.delete("cust-42")).to be_a(AbacatePay::Resources::Customers)
+    end
+
+    it "maps the deleted customer id" do
+      expect(client.delete("cust-42").id).to eq("cust-42")
     end
   end
 end

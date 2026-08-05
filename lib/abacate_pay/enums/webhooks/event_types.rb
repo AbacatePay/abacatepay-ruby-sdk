@@ -34,6 +34,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid webhook event type: #{value}" unless valid?(value)
+
           value
         end
       end

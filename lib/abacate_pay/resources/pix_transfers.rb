@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents an outbound PIX transfer in the AbacatePay system.
     class PixTransfers < Resource
       ENUM_PROPERTIES = {
         status: "AbacatePay::Enums::Transfers::Statuses",

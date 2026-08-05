@@ -10,11 +10,25 @@ module AbacatePay
   class ApiError < Error; end
 
   class << self
-    # Gets or sets the global configuration
-    attr_accessor :configuration
+    # @return [Configuration, nil] The global configuration
+    attr_reader :configuration
+
+    # Replacing the configuration invalidates every memoized client, so a
+    # client built against the previous credentials can never outlive them.
+    #
+    # @param value [Configuration, nil] The new configuration
+    # @return [void]
+    def configuration=(value)
+      @configuration = value
+      reset_clients!
+    end
   end
 
   # Configures the SDK
+  #
+  # Memoized clients are discarded so a token changed at runtime takes effect
+  # immediately. Without this, a client built before the change keeps sending
+  # the old bearer token.
   #
   # @example
   #   AbacatePay.configure do |config|
@@ -28,6 +42,7 @@ module AbacatePay
     self.configuration ||= Configuration.new
     yield(configuration)
     configuration.validate!
+    reset_clients!
   end
 
   # Resets the configuration to defaults
@@ -35,62 +50,100 @@ module AbacatePay
   # @return [void]
   def self.reset!
     self.configuration = Configuration.new
-    @customers = nil
-    @products = nil
-    @coupons = nil
-    @checkouts = nil
-    @subscriptions = nil
-    @transparents = nil
-    @pix = nil
-    @payouts = nil
-    @store = nil
+    reset_clients!
   end
+
+  # Returns the configuration, refusing to proceed if the SDK was never set up.
+  #
+  # Forgetting to call {configure} is the most common first-run mistake; without
+  # this the failure surfaces as `NoMethodError: undefined method 'api_url' for
+  # nil` from deep inside the client.
+  #
+  # @return [Configuration] The active configuration
+  # @raise [ConfigurationError] if {configure} has not been called
+  def self.configuration!
+    configuration || raise(
+      ConfigurationError,
+      "AbacatePay is not configured. Call AbacatePay.configure { |c| c.api_token = ENV['ABACATEPAY_API_KEY'] } first."
+    )
+  end
+
+  # Discards every memoized client so the next call rebuilds from current config
+  #
+  # @return [void]
+  def self.reset_clients!
+    @clients = {}
+  end
+
+  # @return [Hash{Symbol => Clients::Client}] Memoized clients, keyed by name
+  def self.clients
+    @clients ||= {}
+  end
+  private_class_method :clients
 
   # @return [Clients::CustomerClient] Customer API client
   def self.customers
-    @customers ||= Clients::CustomerClient.new
+    clients[:customers] ||= Clients::CustomerClient.new
   end
 
   # @return [Clients::ProductClient] Product API client
   def self.products
-    @products ||= Clients::ProductClient.new
+    clients[:products] ||= Clients::ProductClient.new
   end
 
   # @return [Clients::CouponClient] Coupon API client
   def self.coupons
-    @coupons ||= Clients::CouponClient.new
+    clients[:coupons] ||= Clients::CouponClient.new
   end
 
   # @return [Clients::CheckoutClient] Checkout API client
   def self.checkouts
-    @checkouts ||= Clients::CheckoutClient.new
+    clients[:checkouts] ||= Clients::CheckoutClient.new
   end
 
   # @return [Clients::SubscriptionClient] Subscription API client
   def self.subscriptions
-    @subscriptions ||= Clients::SubscriptionClient.new
+    clients[:subscriptions] ||= Clients::SubscriptionClient.new
   end
 
   # @return [Clients::TransparentClient] PIX Transparent API client
   def self.transparents
-    @transparents ||= Clients::TransparentClient.new
+    clients[:transparents] ||= Clients::TransparentClient.new
   end
 
   # @return [Clients::PixClient] PIX Transfer API client
   def self.pix
-    @pix ||= Clients::PixClient.new
+    clients[:pix] ||= Clients::PixClient.new
   end
 
   # @return [Clients::PayoutClient] Payout API client
   def self.payouts
-    @payouts ||= Clients::PayoutClient.new
+    clients[:payouts] ||= Clients::PayoutClient.new
   end
 
   # @return [Clients::StoreClient] Store API client
   def self.store
-    @store ||= Clients::StoreClient.new
+    clients[:store] ||= Clients::StoreClient.new
+  end
+
+  # @return [Clients::PaymentLinkClient] Reusable payment link API client
+  def self.payment_links
+    clients[:payment_links] ||= Clients::PaymentLinkClient.new
+  end
+
+  # Webhook *endpoint registration*. To verify an inbound delivery, use
+  # {AbacatePay::Webhooks.construct_event}.
+  #
+  # @return [Clients::WebhookClient] Webhook management API client
+  def self.webhook_endpoints
+    clients[:webhook_endpoints] ||= Clients::WebhookClient.new
   end
 end
 
-# Autoload all components
-Dir[File.join(__dir__, "abacate_pay", "**", "*.rb")].sort.each { |file| require file }
+# Components are required explicitly, in dependency order. A glob would load
+# clients/billing_client.rb before clients/client.rb and blow up on the
+# superclass, and it silently swallows files that were never wired up.
+require "abacate_pay/enums"
+require "abacate_pay/resources"
+require "abacate_pay/clients"
+require "abacate_pay/webhooks"

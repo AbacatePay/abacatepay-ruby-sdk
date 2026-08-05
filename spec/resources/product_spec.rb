@@ -5,17 +5,17 @@ RSpec.describe AbacatePay::Resources::Products do
     context "with API data" do
       let(:product) do
         described_class.new({
-          "id" => "prod-1",
-          "externalId" => "ext-1",
-          "name" => "Test Product",
-          "price" => 1500,
-          "currency" => "BRL",
-          "description" => "A test product",
-          "imageUrl" => "https://example.com/img.png",
-          "cycle" => "MONTHLY",
-          "createdAt" => "2026-01-15T10:00:00Z",
-          "updatedAt" => "2026-01-15T12:00:00Z"
-        })
+                              "id" => "prod-1",
+                              "externalId" => "ext-1",
+                              "name" => "Test Product",
+                              "price" => 1500,
+                              "currency" => "BRL",
+                              "description" => "A test product",
+                              "imageUrl" => "https://example.com/img.png",
+                              "cycle" => "MONTHLY",
+                              "createdAt" => "2026-01-15T10:00:00Z",
+                              "updatedAt" => "2026-01-15T12:00:00Z"
+                            })
       end
 
       it("sets id") { expect(product.id).to eq("prod-1") }

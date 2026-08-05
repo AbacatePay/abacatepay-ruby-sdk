@@ -9,16 +9,16 @@ module AbacatePay
     class Billings < Resource
       # Maps property names to their corresponding resource classes
       RESOURCE_PROPERTIES = {
-        metadata: 'AbacatePay::Resources::Billings::Metadata',
-        customer: 'AbacatePay::Resources::Customers',
-        products: 'AbacatePay::Resources::Billings::Product'
+        metadata: "AbacatePay::Resources::Billings::Metadata",
+        customer: "AbacatePay::Resources::Customers",
+        products: "AbacatePay::Resources::Billings::Product"
       }.freeze
 
       # Maps property names to their corresponding enum classes
       ENUM_PROPERTIES = {
-        status: 'AbacatePay::Enums::Billings::Statuses',
-        frequency: 'AbacatePay::Enums::Billings::Frequencies',
-        methods: 'AbacatePay::Enums::Billings::Methods'
+        status: "AbacatePay::Enums::Billings::Statuses",
+        frequency: "AbacatePay::Enums::Billings::Frequencies",
+        methods: "AbacatePay::Enums::Billings::Methods"
       }.freeze
 
       # Properties that should be handled as DateTime objects
@@ -83,7 +83,7 @@ module AbacatePay
       # @return [Object] The processed value
       def process_enum_value(property, value)
         enum_class = Object.const_get(ENUM_PROPERTIES[property.to_sym])
-        
+
         if value.is_a?(Array)
           value.map { |item| initialize_enum(enum_class, item) }
         else
@@ -98,8 +98,8 @@ module AbacatePay
       # @return [Object] The processed value
       def process_resource_value(property, value)
         resource_class = Object.const_get(RESOURCE_PROPERTIES[property.to_sym])
-        
-        if property.to_s == 'products' && value.is_a?(Array)
+
+        if property.to_s == "products" && value.is_a?(Array)
           value.map { |item| initialize_resource(resource_class, item) }
         else
           initialize_resource(resource_class, value)
@@ -110,8 +110,8 @@ module AbacatePay
 
       # @!visibility private
       attr_writer :id, :account_id, :url, :methods, :products,
-                 :dev_mode, :amount, :metadata, :frequency, :status,
-                 :customer, :next_billing, :created_at, :updated_at
+                  :dev_mode, :amount, :metadata, :frequency, :status,
+                  :customer, :next_billing, :created_at, :updated_at
     end
   end
 end

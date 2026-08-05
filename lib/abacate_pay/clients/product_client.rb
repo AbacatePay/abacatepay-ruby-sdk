@@ -2,6 +2,9 @@
 
 module AbacatePay
   module Clients
+    # Client for the product catalogue in the AbacatePay API.
+    #
+    # Products are the line items referenced by billings and checkouts.
     class ProductClient < Client
       URI = "products"
 

@@ -2,6 +2,10 @@
 
 module AbacatePay
   module Webhooks
+    # A parsed webhook event.
+    #
+    # Accepts both the camelCase and snake_case spellings AbacatePay has used
+    # for the envelope fields, so older and newer webhook versions both parse.
     class Event
       attr_reader :type, :data, :created_at
 

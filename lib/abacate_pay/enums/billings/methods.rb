@@ -31,6 +31,7 @@ module AbacatePay
         # @raise [ArgumentError] if value is invalid
         def self.validate!(value)
           raise ArgumentError, "Invalid payment method: #{value}" unless valid?(value)
+
           value
         end
       end

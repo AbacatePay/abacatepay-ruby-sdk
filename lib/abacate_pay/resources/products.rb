@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a catalogue product in the AbacatePay system.
     class Products < Resource
       ENUM_PROPERTIES = {
         cycle: "AbacatePay::Enums::Products::Cycles"

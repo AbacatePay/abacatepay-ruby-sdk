@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/coupons/list") do
+      stubs.get("/v2/coupons/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "coup-1", "code" => "SAVE10" }] }.to_json]
       end
@@ -30,7 +30,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "#get" do
     before do
-      stubs.get("/v1/coupons/get") do
+      stubs.get("/v2/coupons/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "coup-1", "code" => "SAVE10" } }.to_json]
       end
@@ -43,7 +43,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/coupons/create") do
+      stubs.post("/v2/coupons/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "coup-new", "code" => "NEW20" } }.to_json]
       end
@@ -51,8 +51,8 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
     it "returns a Coupons resource" do
       coupon = AbacatePay::Resources::Coupons.new({
-        "code" => "NEW20", "discount" => 20, "discountKind" => "PERCENTAGE"
-      })
+                                                    "code" => "NEW20", "discount" => 20, "discountKind" => "PERCENTAGE"
+                                                  })
       result = client.create(coupon)
       expect(result).to be_a(AbacatePay::Resources::Coupons)
       expect(result.id).to eq("coup-new")
@@ -61,7 +61,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "#delete" do
     before do
-      stubs.post("/v1/coupons/delete") do
+      stubs.post("/v2/coupons/delete") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "coup-1" } }.to_json]
       end
@@ -74,7 +74,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "#toggle" do
     before do
-      stubs.post("/v1/coupons/toggle") do
+      stubs.post("/v2/coupons/toggle") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "coup-1", "status" => "INACTIVE" } }.to_json]
       end
@@ -89,7 +89,7 @@ RSpec.describe AbacatePay::Clients::CouponClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/coupons/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/coupons/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

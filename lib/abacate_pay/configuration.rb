@@ -4,29 +4,44 @@ module AbacatePay
   # Configuration class for the AbacatePay SDK
   #
   # This class handles all configuration options for the SDK, including
-  # API credentials, environment settings, and other customizable options.
+  # API credentials and request behaviour.
   #
   # @api public
   class Configuration
+    # The only base URL AbacatePay serves. The v1 prefix was retired and now
+    # answers `{"error":"Not found"}` for every path, so there is nothing to
+    # negotiate between.
+    API_BASE_URL = "https://api.abacatepay.com/v2"
+
     # @return [String] API token for authentication
     attr_accessor :api_token
 
-    # @return [Symbol] Current environment (:production or :sandbox)
-    attr_accessor :environment
-
     # @return [Integer] Request timeout in seconds
     attr_accessor :timeout
-
-    # @return [String] Base API URL
-    attr_reader :api_url
 
     # Initialize a new configuration with default values
     #
     # @api public
     def initialize
-      @environment = :sandbox
       @timeout = 30
       @api_token = nil
+    end
+
+    # @deprecated The environment is determined by the API key itself — keys
+    #   created in Dev mode produce simulated transactions, production keys
+    #   produce real ones. This setting has never had any effect and is kept
+    #   only so existing initializers keep loading.
+    # @return [nil]
+    attr_reader :environment
+
+    # @deprecated See {#environment}.
+    # @param value [Symbol] Ignored
+    # @return [void]
+    def environment=(value)
+      @environment = value
+      warn "[DEPRECATION] AbacatePay config.environment has no effect and will be removed. " \
+           "The environment is determined by the API key: Dev mode keys simulate transactions, " \
+           "production keys do not."
     end
 
     # Validates the configuration
@@ -37,18 +52,16 @@ module AbacatePay
     # @api public
     def validate!
       raise ConfigurationError, "API token is required" if api_token.nil?
-      raise ConfigurationError, "Invalid environment" unless %i[production sandbox].include?(environment)
+      raise ConfigurationError, "API token must not be empty" if api_token.to_s.strip.empty?
     end
 
-    # Gets the base API URL, auto-detecting API version from token prefix.
-    # Tokens starting with "abc_dev_" or "abc_live_" are v2; others default to v1.
+    # Gets the base API URL
     #
     # @return [String] The base API URL
     #
     # @api public
     def api_url
-      version = api_token&.match?(/\Aabc_(dev|live)_/) ? "v2" : "v1"
-      "https://api.abacatepay.com/#{version}"
+      API_BASE_URL
     end
   end
 end

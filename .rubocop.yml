@@ -1,0 +1,125 @@
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "vendor/**/*"
+    - "pkg/**/*"
+    - "tmp/**/*"
+    - "sig/**/*"
+
+# The codebase uses double quotes consistently (Bundler gem template default).
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Layout/LineLength:
+  Max: 120
+
+# Resources subclass Resource, which intentionally has no #initialize —
+# it is a behaviour mixin, not a stateful base class. Calling super would
+# only reach Object#initialize, which is a no-op.
+Lint/MissingSuper:
+  Exclude:
+    - "lib/abacate_pay/resources/**/*.rb"
+    - "spec/**/*"
+
+# Test doubles exist precisely to expose or stub inherited behaviour.
+Lint/UselessMethodDefinition:
+  Exclude:
+    - "spec/**/*"
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+# Enums expose a `.values` class method returning an Array. The cop assumes a
+# Hash and would rewrite it to `each_value`, which does not exist there.
+Style/HashEachMethods:
+  AllowedReceivers:
+    - described_class
+
+# Enum modules are self-documenting constant tables; a doc comment per
+# module adds noise without adding information.
+Style/Documentation:
+  Exclude:
+    - "lib/abacate_pay/enums/**/*.rb"
+
+Naming/MethodParameterName:
+  AllowedNames:
+    - id
+
+# `verify!` raises on failure and returns true on success — the bang, not a
+# question mark, is the right signal. `valid?` is the predicate counterpart.
+Naming/PredicateMethod:
+  AllowedMethods:
+    - verify!
+
+# Faraday errors carry a response payload, not just a message; the compact
+# form is how Faraday itself documents constructing them.
+Style/RaiseArgs:
+  AllowedCompactTypes:
+    - Faraday::ConnectionFailed
+    - Faraday::TimeoutError
+    - Faraday::ClientError
+    - Faraday::ServerError
+
+# Development dependencies live in the gemspec so a single file describes the
+# gem completely.
+Gemspec/DevelopmentDependencies:
+  EnforcedStyle: gemspec
+
+Metrics/MethodLength:
+  Max: 25
+  Exclude:
+    - "spec/**/*"
+
+Metrics/AbcSize:
+  Max: 25
+  Exclude:
+    - "spec/**/*"
+
+Metrics/CyclomaticComplexity:
+  Max: 12
+
+Metrics/PerceivedComplexity:
+  Max: 12
+
+Metrics/ClassLength:
+  Max: 200
+  Exclude:
+    - "spec/**/*"
+
+# RSpec describe/context blocks are naturally long; length is not a
+# meaningful signal there.
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "*.gemspec"
+
+Metrics/ParameterLists:
+  Exclude:
+    - "lib/abacate_pay/resources/**/*.rb"
+
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/MultipleExpectations:
+  Max: 10
+
+RSpec/NestedGroups:
+  Max: 4
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+# These specs deliberately cut across the whole library rather than describing
+# a single class.
+RSpec/DescribeClass:
+  Exclude:
+    - "spec/clients/request_contract_spec.rb"
+    - "spec/packaging_spec.rb"

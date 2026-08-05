@@ -2,6 +2,10 @@
 
 module AbacatePay
   module Clients
+    # Client for transparent PIX checkout in the AbacatePay API.
+    #
+    # Transparent checkout returns the QR code and copy-and-paste
+    # payload directly, so the payment stays inside your own UI.
     class TransparentClient < Client
       URI = "transparents"
 
@@ -52,6 +56,16 @@ module AbacatePay
       # @return [Resources::Transparents]
       def simulate_payment(id)
         response = request("POST", "simulate-payment", json: { id: id })
+        Resources::Transparents.new(response)
+      end
+
+      # Refunds a transparent payment in full. AbacatePay does not support
+      # partial refunds — the original amount is always returned.
+      #
+      # @param id [String] Public charge ID (`pix_char_...`, `card_...`, `char_...`)
+      # @return [Resources::Transparents] The refunded charge
+      def refund(id)
+        response = request("POST", "refund", json: { id: id })
         Resources::Transparents.new(response)
       end
     end

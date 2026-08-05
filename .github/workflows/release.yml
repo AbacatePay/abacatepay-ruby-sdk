@@ -1,0 +1,80 @@
+name: Release
+
+# Publishing is tied to a version tag, never to a branch push. Pushing a commit
+# to main must not attempt to republish a version that already exists.
+on:
+  push:
+    tags: ["v*"]
+
+# Two tags pushed back to back must not race each other to RubyGems.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # A tag that disagrees with the gemspec publishes the wrong version under
+      # the right name, which cannot be undone once it is on RubyGems.
+      - name: Verify tag matches gemspec version
+        run: |
+          gem_version="$(ruby -Ilib -e 'require "abacate_pay/version"; print AbacatePay::VERSION')"
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$gem_version" != "$tag_version" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match AbacatePay::VERSION (${gem_version})"
+            exit 1
+          fi
+          echo "Releasing ${gem_version}"
+
+      - name: Run specs
+        run: bundle exec rspec
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --format github
+
+  publish:
+    name: Publish to RubyGems
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: rubygems
+
+    permissions:
+      contents: read
+      # Required for RubyGems Trusted Publishing: the runner mints a short-lived
+      # OIDC token instead of carrying a long-lived API key in a repo secret.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # Exchanges the OIDC token for a scoped, short-lived RubyGems credential.
+      # Requires a trusted publisher configured at:
+      # https://rubygems.org/gems/abacatepay-ruby/trusted_publishers
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@v2
+
+      - name: Build gem
+        run: gem build abacatepay-ruby.gemspec
+
+      - name: Push gem
+        run: gem push abacatepay-ruby-*.gem

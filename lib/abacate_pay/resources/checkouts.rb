@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a checkout session in the AbacatePay system.
     class Checkouts < Resource
       RESOURCE_PROPERTIES = {
         metadata: "AbacatePay::Resources::Billings::Metadata",

@@ -29,7 +29,7 @@ module AbacatePay
       # @raise [ArgumentError] If the value is invalid
       def initialize_enum(enum_class, value)
         return nil if value.nil? || value.empty?
-        
+
         enum_class.validate!(value)
       end
 
@@ -69,7 +69,7 @@ module AbacatePay
         data.each do |key, value|
           property = camel_to_snake(key)
           next unless respond_to?("#{property}=", true)
-          
+
           send("#{property}=", process_value(property, value))
         end
       end
@@ -90,7 +90,7 @@ module AbacatePay
       # @param str [String] The string to convert
       # @return [String] The converted string
       def snake_to_camel(str)
-        str.split('_')
+        str.split("_")
            .map.with_index { |word, i| i.zero? ? word : word.capitalize }
            .join
       end
@@ -102,23 +102,23 @@ module AbacatePay
       # @return [Hash] The hash representation
       def to_hash
         instance_variables.each_with_object({}) do |var, hash|
-          next if var.to_s.start_with?('@__')
-          
+          next if var.to_s.start_with?("@__")
+
           value = instance_variable_get(var)
-          key = snake_to_camel(var.to_s.delete('@'))
-          
+          key = snake_to_camel(var.to_s.delete("@"))
+
           hash[key] = case value
-                     when DateTime
-                       value.iso8601
-                     when Resource
-                       value.to_hash
-                     when Module
-                       value.respond_to?(:value) ? value.value : value
-                     when Array
-                       value.map { |v| v.respond_to?(:to_hash) ? v.to_hash : v }
-                     else
-                       value
-                     end
+                      when DateTime
+                        value.iso8601
+                      when Resource
+                        value.to_hash
+                      when Module
+                        value.respond_to?(:value) ? value.value : value
+                      when Array
+                        value.map { |v| v.respond_to?(:to_hash) ? v.to_hash : v }
+                      else
+                        value
+                      end
         end.compact
       end
     end

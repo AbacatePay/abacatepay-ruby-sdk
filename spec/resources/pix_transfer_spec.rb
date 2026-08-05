@@ -5,15 +5,15 @@ RSpec.describe AbacatePay::Resources::PixTransfers do
     context "with API data" do
       let(:transfer) do
         described_class.new({
-          "id" => "pix-1",
-          "amount" => 500,
-          "externalId" => "ext-1",
-          "description" => "Transfer to vendor",
-          "key" => "12345678900",
-          "keyType" => "CPF",
-          "status" => "COMPLETE",
-          "createdAt" => "2026-01-15T10:00:00Z"
-        })
+                              "id" => "pix-1",
+                              "amount" => 500,
+                              "externalId" => "ext-1",
+                              "description" => "Transfer to vendor",
+                              "key" => "12345678900",
+                              "keyType" => "CPF",
+                              "status" => "COMPLETE",
+                              "createdAt" => "2026-01-15T10:00:00Z"
+                            })
       end
 
       it("sets id") { expect(transfer.id).to eq("pix-1") }

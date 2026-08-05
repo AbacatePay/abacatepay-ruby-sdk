@@ -15,16 +15,41 @@ RSpec.describe AbacatePay::Webhooks do
     end
 
     it "raises SignatureError for an invalid signature" do
-      expect {
+      expect do
         described_class.verify!(payload: payload, signature: "invalid", secret: secret)
-      }.to raise_error(AbacatePay::Webhooks::SignatureError, /Invalid webhook signature/)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError, /Invalid webhook signature/)
     end
 
     it "raises SignatureError for a tampered payload" do
       tampered = payload.sub("chk-1", "chk-999")
-      expect {
+      expect do
         described_class.verify!(payload: tampered, signature: valid_signature, secret: secret)
-      }.to raise_error(AbacatePay::Webhooks::SignatureError)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError)
+    end
+
+    # A request with no X-Webhook-Signature header reaches the SDK as nil.
+    it "raises SignatureError when the signature header is absent" do
+      expect do
+        described_class.verify!(payload: payload, signature: nil, secret: secret)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError, /Missing webhook signature/)
+    end
+
+    it "raises SignatureError when the signature header is empty" do
+      expect do
+        described_class.verify!(payload: payload, signature: "", secret: secret)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError, /Missing webhook signature/)
+    end
+
+    it "raises SignatureError when the secret is not configured" do
+      expect do
+        described_class.verify!(payload: payload, signature: valid_signature, secret: nil)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError, /Missing webhook secret/)
+    end
+
+    it "raises SignatureError for a signature of a different length" do
+      expect do
+        described_class.verify!(payload: payload, signature: "#{valid_signature}extra", secret: secret)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError, /Invalid webhook signature/)
     end
   end
 
@@ -38,6 +63,19 @@ RSpec.describe AbacatePay::Webhooks do
     it "returns false for an invalid signature" do
       expect(
         described_class.valid?(payload: payload, signature: "bad", secret: secret)
+      ).to be false
+    end
+
+    # Documented as returning a Boolean — it must never raise for hostile input.
+    it "returns false when the signature header is absent" do
+      expect(
+        described_class.valid?(payload: payload, signature: nil, secret: secret)
+      ).to be false
+    end
+
+    it "returns false when the secret is not configured" do
+      expect(
+        described_class.valid?(payload: payload, signature: valid_signature, secret: nil)
       ).to be false
     end
   end
@@ -56,6 +94,45 @@ RSpec.describe AbacatePay::Webhooks do
     it "extracts the data" do
       event = described_class.parse(payload)
       expect(event.data).to eq({ "id" => "chk-1" })
+    end
+
+    it "raises PayloadError for malformed JSON" do
+      expect do
+        described_class.parse("not json at all")
+      end.to raise_error(AbacatePay::Webhooks::PayloadError, /Malformed webhook payload/)
+    end
+
+    it "raises PayloadError for JSON that is not an object" do
+      expect do
+        described_class.parse("[1,2,3]")
+      end.to raise_error(AbacatePay::Webhooks::PayloadError, /Expected a JSON object/)
+    end
+
+    it "raises PayloadError for an empty body" do
+      expect do
+        described_class.parse("")
+      end.to raise_error(AbacatePay::Webhooks::PayloadError)
+    end
+  end
+
+  describe ".construct_event" do
+    it "returns the parsed Event when the signature is valid" do
+      event = described_class.construct_event(payload: payload, signature: valid_signature, secret: secret)
+
+      expect(event.type).to eq("checkout.completed")
+    end
+
+    it "refuses to parse a payload with an invalid signature" do
+      expect do
+        described_class.construct_event(payload: payload, signature: "forged", secret: secret)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError)
+    end
+
+    # The signature must be checked before the body is even parsed.
+    it "reports the signature failure, not the payload failure, for an unsigned malformed body" do
+      expect do
+        described_class.construct_event(payload: "not json", signature: nil, secret: secret)
+      end.to raise_error(AbacatePay::Webhooks::SignatureError)
     end
   end
 end

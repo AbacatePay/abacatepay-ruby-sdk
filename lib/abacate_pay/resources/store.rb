@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents store-level account data in the AbacatePay system.
     class Store < Resource
       RESOURCE_PROPERTIES = {
         balance: "AbacatePay::Resources::Store::Balance"

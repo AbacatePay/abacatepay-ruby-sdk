@@ -5,13 +5,13 @@ RSpec.describe AbacatePay::Resources::Payouts do
     context "with API data" do
       let(:payout) do
         described_class.new({
-          "id" => "pay-1",
-          "amount" => 5000,
-          "externalId" => "ext-1",
-          "description" => "Monthly withdrawal",
-          "status" => "COMPLETE",
-          "createdAt" => "2026-01-15T10:00:00Z"
-        })
+                              "id" => "pay-1",
+                              "amount" => 5000,
+                              "externalId" => "ext-1",
+                              "description" => "Monthly withdrawal",
+                              "status" => "COMPLETE",
+                              "createdAt" => "2026-01-15T10:00:00Z"
+                            })
       end
 
       it("sets id") { expect(payout.id).to eq("pay-1") }
