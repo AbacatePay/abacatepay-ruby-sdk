@@ -36,11 +36,11 @@ module AbacatePay
       # @return [Resources::Customers] The created Customer object
       def create(data)
         response = request("POST", "create", json: {
-          name: data.metadata&.name,
-          email: data.metadata&.email,
-          cellphone: data.metadata&.cellphone,
-          taxId: data.metadata&.tax_id
-        })
+                             name: data.metadata&.name,
+                             email: data.metadata&.email,
+                             cellphone: data.metadata&.cellphone,
+                             taxId: data.metadata&.tax_id
+                           })
 
         Resources::Customers.new(response)
       end

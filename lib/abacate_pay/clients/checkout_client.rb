@@ -2,6 +2,10 @@
 
 module AbacatePay
   module Clients
+    # Client for one-off checkout sessions in the AbacatePay API.
+    #
+    # Checkouts are single-payment links; use SubscriptionClient for
+    # recurring charges.
     class CheckoutClient < Client
       URI = "checkouts"
 
@@ -26,29 +30,40 @@ module AbacatePay
       # @param data [Resources::Checkouts]
       # @return [Resources::Checkouts]
       def create(data)
-        request_data = {
+        response = request("POST", "create", json: build_create_payload(data))
+        Resources::Checkouts.new(response)
+      end
+
+      # Refunds a paid checkout in full. AbacatePay does not support partial
+      # refunds — the original amount is always returned.
+      #
+      # @param id [String] Public checkout ID (`bill_...`) or charge ID
+      #   (`char_...`, `pix_char_...`, `card_...`)
+      # @return [Resources::Checkouts] The refunded checkout
+      def refund(id)
+        response = request("POST", "refund", json: { id: id })
+        Resources::Checkouts.new(response)
+      end
+
+      private
+
+      # Builds the create-checkout request payload
+      #
+      # @param data [Resources::Checkouts] The checkout to serialize
+      # @return [Hash] The request payload, with nil entries removed
+      def build_create_payload(data)
+        customer_id = data.customer&.id
+
+        {
           frequency: data.frequency,
           methods: data.methods,
           returnUrl: data.metadata&.return_url,
           completionUrl: data.metadata&.completion_url,
-          items: data.products&.map { |product|
-            {
-              id: product.external_id,
-              quantity: product.quantity
-            }
-          }
-        }
-
-        request_data[:externalId] = data.external_id if data.external_id
-        request_data[:coupons] = data.coupons if data.coupons
-
-        customer_id = data.customer&.id
-        if customer_id && !customer_id.to_s.empty?
-          request_data[:customerId] = customer_id
-        end
-
-        response = request("POST", "create", json: request_data.compact)
-        Resources::Checkouts.new(response)
+          items: data.products&.map { |product| { id: product.external_id, quantity: product.quantity } },
+          externalId: data.external_id,
+          coupons: data.coupons,
+          customerId: customer_id.to_s.empty? ? nil : customer_id
+        }.compact
       end
     end
   end

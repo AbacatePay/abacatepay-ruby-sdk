@@ -5,18 +5,18 @@ RSpec.describe AbacatePay::Resources::Transparents do
     context "with API data" do
       let(:transparent) do
         described_class.new({
-          "id" => "tr-1",
-          "amount" => 1000,
-          "status" => "PENDING",
-          "method" => "PIX",
-          "description" => "Test payment",
-          "expiresIn" => 3600,
-          "qrCode" => "00020126...",
-          "qrCodeImage" => "https://example.com/qr.png",
-          "devMode" => true,
-          "createdAt" => "2026-01-15T10:00:00Z",
-          "customer" => { "id" => "cust-1" }
-        })
+                              "id" => "tr-1",
+                              "amount" => 1000,
+                              "status" => "PENDING",
+                              "method" => "PIX",
+                              "description" => "Test payment",
+                              "expiresIn" => 3600,
+                              "qrCode" => "00020126...",
+                              "qrCodeImage" => "https://example.com/qr.png",
+                              "devMode" => true,
+                              "createdAt" => "2026-01-15T10:00:00Z",
+                              "customer" => { "id" => "cust-1" }
+                            })
       end
 
       it("sets id") { expect(transparent.id).to eq("tr-1") }

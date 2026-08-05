@@ -2,6 +2,9 @@
 
 module AbacatePay
   module Clients
+    # Client for recurring subscriptions in the AbacatePay API.
+    #
+    # See Enums::Products::Cycles for the supported billing cycles.
     class SubscriptionClient < Client
       URI = "subscriptions"
 
@@ -23,7 +26,7 @@ module AbacatePay
           methods: data.methods,
           externalId: data.external_id,
           customerId: data.customer&.id,
-          items: data.products&.map { |product|
+          items: data.products&.map do |product|
             {
               externalId: product.external_id,
               name: product.name,
@@ -31,10 +34,20 @@ module AbacatePay
               quantity: product.quantity,
               price: product.price
             }
-          }
+          end
         }
 
         response = request("POST", "create", json: request_data)
+        Resources::Subscriptions.new(response)
+      end
+
+      # Cancels an active subscription immediately. Pending future instalments
+      # are cancelled along with it.
+      #
+      # @param id [String] The subscription ID (`subs_...`)
+      # @return [Resources::Subscriptions] The cancelled subscription
+      def cancel(id)
+        response = request("POST", "cancel", json: { id: id })
         Resources::Subscriptions.new(response)
       end
     end

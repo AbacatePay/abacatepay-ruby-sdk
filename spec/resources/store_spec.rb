@@ -5,14 +5,14 @@ RSpec.describe AbacatePay::Resources::Store do
     context "with API data" do
       let(:store) do
         described_class.new({
-          "id" => "store-1",
-          "name" => "My Store",
-          "balance" => {
-            "available" => 10000,
-            "pending" => 500,
-            "blocked" => 0
-          }
-        })
+                              "id" => "store-1",
+                              "name" => "My Store",
+                              "balance" => {
+                                "available" => 10_000,
+                                "pending" => 500,
+                                "blocked" => 0
+                              }
+                            })
       end
 
       it("sets id") { expect(store.id).to eq("store-1") }
@@ -22,7 +22,7 @@ RSpec.describe AbacatePay::Resources::Store do
         expect(store.balance).to be_a(AbacatePay::Resources::Store::Balance)
       end
 
-      it("maps balance.available") { expect(store.balance.available).to eq(10000) }
+      it("maps balance.available") { expect(store.balance.available).to eq(10_000) }
       it("maps balance.pending") { expect(store.balance.pending).to eq(500) }
       it("maps balance.blocked") { expect(store.balance.blocked).to eq(0) }
     end

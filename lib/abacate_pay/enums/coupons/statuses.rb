@@ -18,6 +18,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid coupon status: #{value}" unless valid?(value)
+
           value
         end
       end

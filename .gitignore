@@ -7,3 +7,7 @@
 /spec/reports/
 /tmp/
 *.gem
+# Local integration testing
+.env
+.env.*
+!.env.example

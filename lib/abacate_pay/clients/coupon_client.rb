@@ -2,6 +2,10 @@
 
 module AbacatePay
   module Clients
+    # Client for discount coupons in the AbacatePay API.
+    #
+    # Supports creating, listing, deleting and toggling coupons
+    # between active and inactive.
     class CouponClient < Client
       URI = "coupons"
 
@@ -27,11 +31,11 @@ module AbacatePay
       # @return [Resources::Coupons]
       def create(data)
         response = request("POST", "create", json: {
-          code: data.code,
-          discount: data.discount,
-          discountKind: data.discount_kind,
-          maxRedeems: data.max_redeems
-        })
+                             code: data.code,
+                             discount: data.discount,
+                             discountKind: data.discount_kind,
+                             maxRedeems: data.max_redeems
+                           })
         Resources::Coupons.new(response)
       end
 

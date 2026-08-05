@@ -9,16 +9,20 @@ Gem::Specification.new do |spec|
   spec.email = ["mathuscardoso@gmail.com"]
 
   spec.summary = "AbacatePay Ruby SDK for you to start receiving payments in seconds"
-  spec.description = "The easiest way to integrate your Ruby application with AbacatePay Gateway for payments, subscriptions, PIX transfers, and more."
+  spec.description = "The easiest way to integrate your Ruby application with AbacatePay Gateway " \
+                     "for payments, subscriptions, PIX transfers, and more."
   spec.homepage = "https://www.abacatepay.com/"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.6.0"
+  # faraday 2.x requires Ruby >= 3.0 and the pinned Bundler requires >= 3.2.
+  # 3.2 is the oldest version exercised by CI; 2.6 was never actually installable.
+  spec.required_ruby_version = ">= 3.2.0"
 
   # spec.metadata["allowed_push_host"] = "https://rubygems.pkg.github.com/AbacatePay"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/AbacatePay/abacatepay-ruby-sdk"
   spec.metadata["changelog_uri"] = "https://github.com/AbacatePay/abacatepay-ruby-sdk/blob/main/CHANGELOG.md"
+  spec.metadata["rubygems_mfa_required"] = "true"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -33,12 +37,16 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "faraday", "~> 2.9"
+  # >= 2.14.3 excludes CVE-2026-54297 (stack-exhaustion DoS in
+  # NestedParamsEncoder). The lockfile only protects this repo — consumers are
+  # protected by the constraint here.
+  spec.add_dependency "faraday", "~> 2.14", ">= 2.14.3"
 
   # Development dependencies
+  spec.add_development_dependency "bundler-audit", "~> 0.9"
   spec.add_development_dependency "rspec", "~> 3.12"
   spec.add_development_dependency "rubocop", "~> 1.57"
-  spec.add_development_dependency "rubocop-rspec", "~> 2.25"
+  spec.add_development_dependency "rubocop-rspec", "~> 3.0"
   spec.add_development_dependency "simplecov", "~> 0.22"
 
   # For more information and examples about making a new gem, check out our

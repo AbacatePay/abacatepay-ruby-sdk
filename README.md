@@ -1,76 +1,236 @@
+<div align="center">
+
 # AbacatePay Ruby SDK
 
-Ruby SDK for [AbacatePay](https://www.abacatepay.com/) payment gateway. Works with any Ruby application (Rails, Sinatra, Hanami, plain Ruby).
+SDK oficial da **AbacatePay** para integrar pagamentos via **PIX** de forma simples, segura e idiomática em Ruby.
 
-## Installation
+O [`abacatepay-ruby`](https://rubygems.org/gems/abacatepay-ruby) é um **wrapper versionado de alto nível** sobre a API da AbacatePay, focado em **DX**, **verificação segura de webhooks** e **erros tipados**.
 
-Add to your Gemfile:
+<img src="https://res.cloudinary.com/dkok1obj5/image/upload/v1767631413/avo_clhmaf.png" width="100%" alt="AbacatePay Open Source"/>
+
+Funciona em qualquer aplicação Ruby — Rails, Sinatra, Hanami ou Ruby puro.
+
+Referência completa da API [aqui](https://abacatepay.readme.io/reference).
+
+## Requisitos
+
+Ruby **3.2 ou superior**. Testado em 3.2, 3.3, 3.4 e 4.0.
+
+## Instalação
+
+</div>
+
+```bash
+bundle add abacatepay-ruby
+```
+
+<div align="center">
+
+Ou adicione ao seu `Gemfile`:
+
+</div>
 
 ```ruby
 gem 'abacatepay-ruby'
 ```
 
-Then run:
+<div align="center">
 
-```bash
-bundle install
-```
+## Uso básico
 
-Or install directly:
-
-```bash
-gem install abacatepay-ruby
-```
-
-## Configuration
+</div>
 
 ```ruby
 AbacatePay.configure do |config|
   config.api_token = ENV['ABACATEPAY_TOKEN']
-  config.environment = :sandbox # or :production
-  config.timeout = 30 # optional, in seconds
+  config.timeout = 30 # opcional, em segundos
 end
 ```
 
-For Rails, place this in `config/initializers/abacatepay.rb`.
+<div align="center">
 
-## Usage
+Nunca utilize sua API key diretamente no código.
+**Sempre use variáveis de ambiente**.
 
-The SDK provides a convenience facade for all resources:
+Em Rails, coloque isso em `config/initializers/abacatepay.rb`.
+
+Trocar o token em runtime tem efeito imediato — os clients são reconstruídos a cada `configure`.
+
+### Criando uma cobrança
+
+</div>
+
+```ruby
+checkout = AbacatePay.checkouts.create(
+  AbacatePay::Resources::Checkouts.new(
+    frequency: 'ONE_TIME',
+    methods: ['PIX'],
+    products: [
+      AbacatePay::Resources::Billings::Product.new(
+        external_id: 'prod_123',
+        name: 'Product A',
+        quantity: 1,
+        price: 100
+      )
+    ],
+    customer: AbacatePay::Resources::Customers.new(id: 'cust_123')
+  )
+)
+```
+
+<div align="center">
+
+### Procure por alguns clientes
+
+</div>
+
+```ruby
+customers = AbacatePay.customers.list(limit: 25)
+```
+
+<div align="center">
+
+Todos os métodos `list` aceitam parâmetros de paginação e filtro opcionais:
+
+</div>
+
+```ruby
+AbacatePay.customers.list(limit: 10, after: 'cursor_abc')
+AbacatePay.checkouts.list(status: 'PAID', email: 'user@example.com')
+```
+
+<div align="center">
+
+## Versionamento
+
+O SDK fala **exclusivamente a v2** — `https://api.abacatepay.com/v2`. A v1 foi desligada pela AbacatePay e responde `{"error":"Not found"}` em toda rota, então não há o que negociar.
+
+O ambiente (dev mode x produção) é definido **pela chave de API**, não por configuração: chaves de Dev mode geram transações simuladas. Por isso `config.environment` não faz nada — ela continua aceita para não quebrar initializers existentes, mas emite aviso de depreciação.
+
+O `BillingClient` também está descontinuado, substituído pelo `CheckoutClient`. Ele emite um aviso ao ser instanciado, e seus endpoints `/billings/*` não existem na v2:
+
+</div>
+
+```
+[DEPRECATION] BillingClient is deprecated. Use CheckoutClient instead.
+```
+
+<div align="center">
+
+## Tratamento de erros
+
+Diferente do SDK de Node, **este SDK levanta exceções** — ele não retorna `{ data, error, success }`. Toda falha vira uma exceção tipada que herda de `AbacatePay::Error`, então você pode capturar tudo de uma vez ou tratar caso a caso.
+
+</div>
+
+```ruby
+begin
+  checkout = AbacatePay.checkouts.create(data)
+rescue AbacatePay::ConfigurationError => e
+  # token ausente ou vazio
+rescue AbacatePay::ApiError => e
+  # a API recusou a chamada, ou houve falha de rede/timeout
+  Rails.logger.error(e.message)
+end
+```
+
+<div align="center">
+
+| Exceção | Quando acontece |
+|---|---|
+| `AbacatePay::ConfigurationError` | Token ausente ou vazio |
+| `AbacatePay::ApiError` | Erro da API, falha de rede ou timeout |
+| `AbacatePay::Webhooks::SignatureError` | Assinatura de webhook ausente, vazia ou inválida |
+| `AbacatePay::Webhooks::PayloadError` | Corpo do webhook malformado ou que não é um objeto JSON |
+
+Erros de rede e timeout são normalizados para `ApiError`, com a mensagem da API preservada quando ela envia uma.
+
+## Webhooks
+
+Endpoints de webhook são públicos e não autenticados. Use `construct_event`, que **verifica a assinatura antes de fazer o parse** — é o único ponto de entrada que não permite agir sobre um payload não verificado.
+
+</div>
+
+```ruby
+payload   = request.body.read
+signature = request.headers['X-Webhook-Signature']
+secret    = ENV['ABACATEPAY_WEBHOOK_SECRET']
+
+begin
+  event = AbacatePay::Webhooks.construct_event(
+    payload: payload, signature: signature, secret: secret
+  )
+rescue AbacatePay::Webhooks::SignatureError
+  return head :unauthorized
+rescue AbacatePay::Webhooks::PayloadError
+  return head :bad_request
+end
+
+case event.type
+when 'checkout.completed'    then handle_payment(event.data)
+when 'checkout.refunded'     then handle_refund(event.data)
+when 'subscription.renewed'  then handle_renewal(event.data)
+end
+```
+
+<div align="center">
+
+Header ausente, secret vazio, assinatura forjada e corpo malformado são todos tratados como casos esperados — levantam erro tipado em vez de derrubar o endpoint. A comparação de assinatura é feita em tempo constante.
+
+Os métodos de baixo nível continuam disponíveis:
+
+</div>
+
+```ruby
+# Levanta SignatureError se a assinatura estiver ausente ou inválida
+AbacatePay::Webhooks.verify!(payload: payload, signature: signature, secret: secret)
+
+# Contraparte booleana — nunca levanta exceção
+AbacatePay::Webhooks.valid?(payload: payload, signature: signature, secret: secret)
+
+# Faz parse de um corpo já verificado
+AbacatePay::Webhooks.parse(payload)
+```
+
+<div align="center">
+
+### Eventos disponíveis
+
+| Categoria | Eventos |
+|---|---|
+| Checkout | `checkout.completed`, `checkout.refunded`, `checkout.disputed` |
+| Transparent | `transparent.completed`, `transparent.refunded`, `transparent.disputed` |
+| Subscription | `subscription.completed`, `subscription.renewed`, `subscription.cancelled` |
+| Transfer | `transfer.completed`, `transfer.failed` |
+| Payout | `payout.completed`, `payout.failed` |
+
+## Recursos
+
+Todos os recursos são acessíveis pela fachada `AbacatePay.<recurso>`.
+
+| Recurso | Métodos |
+|---|---|
+| `customers` | `list` `get` `create` `delete` |
+| `products` | `list` `get` `create` `delete` |
+| `coupons` | `list` `get` `create` `delete` `toggle` |
+| `checkouts` | `list` `get` `create` `refund` |
+| `subscriptions` | `list` `create` `cancel` |
+| `transparents` | `list` `create` `check` `simulate_payment` `refund` |
+| `pix` | `list` `get` `send_pix` |
+| `payouts` | `list` `get` `create` |
+| `store` | `get` `merchant_info` `mrr` `revenue` |
+| `payment_links` | `list` `get` `create` `refund` |
+| `webhook_endpoints` | `list` `get` `create` `delete` |
+
+### Clientes
+
+</div>
 
 ```ruby
 AbacatePay.customers.list
-AbacatePay.checkouts.create(data)
-AbacatePay.products.get(id)
-```
+AbacatePay.customers.get('cust_123')
+AbacatePay.customers.delete('cust_123')
 
-Or instantiate clients directly:
-
-```ruby
-client = AbacatePay::Clients::CheckoutClient.new
-client.list
-```
-
-All `list` methods accept optional pagination parameters:
-
-```ruby
-AbacatePay.customers.list(limit: 10, after: "cursor_abc")
-```
-
----
-
-## Resources
-
-### Customers
-
-```ruby
-# List all customers
-AbacatePay.customers.list
-
-# Get a customer by ID
-AbacatePay.customers.get("cust_123")
-
-# Create a customer
 AbacatePay.customers.create(
   AbacatePay::Resources::Customers.new(
     metadata: AbacatePay::Resources::Customers::Metadata.new(
@@ -81,128 +241,55 @@ AbacatePay.customers.create(
     )
   )
 )
-
-# Delete a customer
-AbacatePay.customers.delete("cust_123")
 ```
 
-### Products
+<div align="center">
+
+### Produtos
+
+</div>
 
 ```ruby
-# List all products
-AbacatePay.products.list
-
-# Get a product
-AbacatePay.products.get("prod_123")
-
-# Create a product
 AbacatePay.products.create(
   AbacatePay::Resources::Products.new(
-    externalId: 'my-product-1',
+    external_id: 'my-product-1',
     name: 'Monthly Plan',
-    price: 2990, # R$ 29.90 in cents
+    price: 2990,        # R$ 29,90 em centavos
     currency: 'BRL',
-    description: 'Access to all features',
-    cycle: 'MONTHLY' # WEEKLY, MONTHLY, SEMIANNUALLY, ANNUALLY or nil for one-time
+    description: 'Acesso a todos os recursos',
+    cycle: 'MONTHLY'    # ou nil para pagamento único
   )
 )
-
-# Delete a product
-AbacatePay.products.delete("prod_123")
 ```
 
-### Coupons
+<div align="center">
+
+### Cupons
+
+</div>
 
 ```ruby
-# List all coupons
-AbacatePay.coupons.list
-
-# Get a coupon
-AbacatePay.coupons.get("coup_123")
-
-# Create a coupon
 AbacatePay.coupons.create(
   AbacatePay::Resources::Coupons.new(
     code: 'SAVE20',
     discount: 20,
-    discountKind: 'PERCENTAGE', # or 'FIXED'
-    maxRedeems: 100
+    discount_kind: 'PERCENTAGE', # ou 'FIXED'
+    max_redeems: 100
   )
 )
 
-# Toggle coupon active/inactive
-AbacatePay.coupons.toggle("coup_123")
-
-# Delete a coupon
-AbacatePay.coupons.delete("coup_123")
+AbacatePay.coupons.toggle('coup_123')
 ```
 
-### Checkouts
+<div align="center">
+
+### Assinaturas
+
+Exigem exatamente um produto com `cycle` definido.
+
+</div>
 
 ```ruby
-# List checkouts (with optional filters)
-AbacatePay.checkouts.list
-AbacatePay.checkouts.list(status: "PAID", email: "user@example.com")
-
-# Get a checkout
-AbacatePay.checkouts.get("chk_123")
-
-# Create a checkout with a new customer
-AbacatePay.checkouts.create(
-  AbacatePay::Resources::Checkouts.new(
-    frequency: 'ONE_TIME',
-    methods: ['PIX', 'CARD'],
-    products: [
-      AbacatePay::Resources::Billings::Product.new(
-        external_id: 'abc_123',
-        name: 'Product A',
-        description: 'Description of product A',
-        quantity: 1,
-        price: 100
-      )
-    ],
-    metadata: AbacatePay::Resources::Billings::Metadata.new(
-      return_url: 'https://yoursite.com/cancel',
-      completion_url: 'https://yoursite.com/success'
-    ),
-    customer: AbacatePay::Resources::Customers.new(
-      metadata: AbacatePay::Resources::Customers::Metadata.new(
-        name: 'Abacate Lover',
-        cellphone: '01912341234',
-        email: 'lover@abacate.com',
-        tax_id: '13827826837'
-      )
-    )
-  )
-)
-
-# Create a checkout with an existing customer
-AbacatePay.checkouts.create(
-  AbacatePay::Resources::Checkouts.new(
-    frequency: 'ONE_TIME',
-    methods: ['PIX'],
-    products: [...],
-    customer: AbacatePay::Resources::Customers.new(id: 'cust_DEbpqcN...')
-  )
-)
-
-# Create a reusable payment link
-AbacatePay.checkouts.create(
-  AbacatePay::Resources::Checkouts.new(
-    frequency: 'MULTIPLE_PAYMENTS',
-    methods: ['PIX'],
-    products: [...]
-  )
-)
-```
-
-### Subscriptions
-
-```ruby
-# List subscriptions
-AbacatePay.subscriptions.list
-
-# Create a subscription (requires exactly 1 product with a cycle)
 AbacatePay.subscriptions.create(
   AbacatePay::Resources::Subscriptions.new(
     methods: ['PIX'],
@@ -219,133 +306,151 @@ AbacatePay.subscriptions.create(
 )
 ```
 
-### PIX Transparent Payments (QR Code)
+<div align="center">
+
+### PIX transparente (QR Code)
+
+</div>
 
 ```ruby
-# List QR codes
-AbacatePay.transparents.list
-
-# Generate a PIX QR code
 AbacatePay.transparents.create(
   AbacatePay::Resources::Transparents.new(
-    amount: 1000, # R$ 10.00
-    description: 'Payment for order #123',
-    expiresIn: 3600
+    amount: 1000,
+    description: 'Pedido #123',
+    expires_in: 3600
   )
 )
 
-# Check payment status
-AbacatePay.transparents.check("tr_123")
-
-# Simulate payment (dev mode only)
-AbacatePay.transparents.simulate_payment("tr_123")
+AbacatePay.transparents.check('tr_123')
+AbacatePay.transparents.simulate_payment('tr_123') # apenas em dev mode
 ```
 
-### PIX Transfers
+<div align="center">
+
+### Transferências PIX
+
+</div>
 
 ```ruby
-# List transfers
-AbacatePay.pix.list
-
-# Get a transfer
-AbacatePay.pix.get("pix_123")
-
-# Send PIX to an external key
 AbacatePay.pix.send_pix(
   AbacatePay::Resources::PixTransfers.new(
-    amount: 500, # R$ 5.00
-    externalId: 'transfer-001',
-    description: 'Payment to vendor',
+    amount: 500,
+    external_id: 'transfer-001',
+    description: 'Pagamento ao fornecedor',
     key: '12345678900',
-    keyType: 'CPF' # CPF, CNPJ, PHONE, EMAIL, RANDOM, BR_CODE
+    key_type: 'CPF' # CPF, CNPJ, PHONE, EMAIL, RANDOM, BR_CODE
   )
 )
 ```
 
-### Payouts
+<div align="center">
+
+### Saques
+
+Valor mínimo de R$ 3,50.
+
+</div>
 
 ```ruby
-# List payouts
-AbacatePay.payouts.list
-
-# Get a payout
-AbacatePay.payouts.get("pay_123")
-
-# Create a withdrawal (minimum R$ 3.50)
 AbacatePay.payouts.create(
   AbacatePay::Resources::Payouts.new(
-    amount: 5000, # R$ 50.00
-    externalId: 'withdrawal-001',
-    description: 'Monthly withdrawal'
+    amount: 5000,
+    external_id: 'withdrawal-001',
+    description: 'Saque mensal'
   )
 )
 ```
 
-### Store
+<div align="center">
+
+### Links de pagamento
+
+Um link reutilizável, pago por vários clientes de forma independente — vendas em massa, rifas, formulários de inscrição. Para uma cobrança por cliente, use `checkouts`.
+
+</div>
 
 ```ruby
-# Get account details (balance info)
+link = AbacatePay.payment_links.create(
+  AbacatePay::Resources::Checkouts.new(
+    methods: ['PIX', 'CARD'],
+    external_id: 'campanha-black-friday',
+    products: [
+      AbacatePay::Resources::Billings::Product.new(external_id: 'prod_123', quantity: 1)
+    ]
+  )
+)
+
+puts link.url # compartilhe esta URL
+```
+
+<div align="center">
+
+### Estornos
+
+O estorno é sempre integral — a AbacatePay não faz estorno parcial.
+
+</div>
+
+```ruby
+AbacatePay.checkouts.refund('bill_abc123xyz')
+AbacatePay.transparents.refund('pix_char_abc123xyz')
+AbacatePay.payment_links.refund('char_abc123xyz')
+```
+
+<div align="center">
+
+### Cancelar assinatura
+
+Cancela imediatamente; parcelas futuras pendentes são canceladas junto.
+
+</div>
+
+```ruby
+AbacatePay.subscriptions.cancel('subs_abc123xyz')
+```
+
+<div align="center">
+
+### Registro de webhooks
+
+Isto gerencia **para onde** a AbacatePay entrega os eventos. Para verificar uma entrega recebida, use `Webhooks.construct_event`.
+
+</div>
+
+```ruby
+AbacatePay.webhook_endpoints.create(
+  name:     'Pagamentos',
+  endpoint: 'https://meusite.com/webhooks/abacatepay', # precisa ser HTTPS
+  secret:   ENV['ABACATEPAY_WEBHOOK_SECRET'],
+  events:   ['checkout.completed', 'subscription.renewed']
+)
+
+AbacatePay.webhook_endpoints.list
+AbacatePay.webhook_endpoints.delete('wh_123')
+```
+
+<div align="center">
+
+### Loja
+
+</div>
+
+```ruby
 store = AbacatePay.store.get
 store.balance.available # => 10000
 store.balance.pending   # => 500
 store.balance.blocked   # => 0
 
-# Get merchant info
-AbacatePay.store.merchant_info
-
-# Get MRR metrics
-AbacatePay.store.mrr
-
-# Get revenue by period
 AbacatePay.store.revenue(start_date: '2026-01-01', end_date: '2026-03-30')
 ```
 
----
-
-## Webhooks
-
-Verify webhook signatures and parse events:
-
-```ruby
-payload = request.body.read
-signature = request.headers['X-Webhook-Signature']
-secret = ENV['ABACATEPAY_WEBHOOK_SECRET']
-
-# Verify signature (raises AbacatePay::Webhooks::SignatureError if invalid)
-AbacatePay::Webhooks.verify!(payload: payload, signature: signature, secret: secret)
-
-# Or use the boolean version
-if AbacatePay::Webhooks.valid?(payload: payload, signature: signature, secret: secret)
-  event = AbacatePay::Webhooks.parse(payload)
-
-  case event.type
-  when 'checkout.completed'
-    # handle successful payment
-  when 'checkout.refunded'
-    # handle refund
-  when 'subscription.renewed'
-    # handle subscription renewal
-  end
-end
-```
-
-### Webhook event types
-
-| Category | Events |
-|---|---|
-| Checkout | `checkout.completed`, `checkout.refunded`, `checkout.disputed` |
-| Transparent | `transparent.completed`, `transparent.refunded`, `transparent.disputed` |
-| Subscription | `subscription.completed`, `subscription.renewed`, `subscription.cancelled` |
-| Transfer | `transfer.completed`, `transfer.failed` |
-| Payout | `payout.completed`, `payout.failed` |
-
----
+<div align="center">
 
 ## Enums
 
-Available enum values for validation:
+Os valores são validados na construção do recurso — um valor inválido levanta `ArgumentError` antes de qualquer chamada de rede.
 
-| Enum | Values |
+| Enum | Valores |
 |---|---|
 | `Billings::Methods` | `PIX`, `CARD` |
 | `Billings::Frequencies` | `ONE_TIME`, `WEEKLY`, `MONTHLY`, `SEMIANNUALLY`, `ANNUALLY`, `MULTIPLE_PAYMENTS` |
@@ -357,45 +462,26 @@ Available enum values for validation:
 | `Transfers::Statuses` | `PENDING`, `COMPLETE`, `CANCELLED`, `EXPIRED`, `REFUNDED`, `FAILED` |
 | `Payouts::Statuses` | `PENDING`, `COMPLETE`, `CANCELLED`, `EXPIRED`, `REFUNDED` |
 
----
+## Contribuindo
 
-## Error Handling
+</div>
 
-```ruby
-begin
-  AbacatePay.checkouts.create(data)
-rescue AbacatePay::ConfigurationError => e
-  # API token missing or invalid environment
-rescue AbacatePay::ApiError => e
-  # API request failed
-rescue AbacatePay::Webhooks::SignatureError => e
-  # Invalid webhook signature
-end
+```bash
+git clone https://github.com/AbacatePay/abacatepay-ruby-sdk.git
+cd abacatepay-ruby-sdk
+bundle install
+bundle exec rake        # specs + rubocop
 ```
 
----
+<div align="center">
 
-## Documentation
+Antes de abrir um PR, garanta que `bundle exec rake` passa e que a cobertura não caiu — o CI roda os specs em Ruby 3.2, 3.3, 3.4 e 4.0, mais RuboCop, auditoria de dependências e build do gem.
 
-Official API documentation: https://abacatepay.readme.io/reference
-
-## Contribution
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository
-2. Create a branch: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit
-4. Push to your branch: `git push origin feature/your-feature-name`
-5. Open a pull request
-
-Please ensure your code:
-
-- Follows Ruby style guidelines
-- Includes appropriate tests
-- Passes all tests (`bundle exec rspec`)
-- Passes style checks (`bundle exec rubocop`)
-
-## License
+## Licença
 
 MIT
+
+Feito com 🥑 pela equipe AbacatePay</br>
+Open source, de verdade.
+
+</div>

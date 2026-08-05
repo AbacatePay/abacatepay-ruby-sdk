@@ -3,6 +3,7 @@
 module AbacatePay
   module Resources
     class Store < Resource
+      # Represents the available balance of a store.
       class Balance < Resource
         attr_reader :available, :pending, :blocked
 

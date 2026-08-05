@@ -2,6 +2,9 @@
 
 module AbacatePay
   module Clients
+    # Client for store-level data in the AbacatePay API.
+    #
+    # Exposes the account balance and revenue reporting for a date range.
     class StoreClient < Client
       def initialize(client = nil)
         super("", client)
@@ -28,9 +31,9 @@ module AbacatePay
       # @return [Hash] Revenue data
       def revenue(start_date:, end_date:)
         request("GET", "public-mrr/revenue", params: {
-          startDate: start_date,
-          endDate: end_date
-        })
+                  startDate: start_date,
+                  endDate: end_date
+                })
       end
     end
   end

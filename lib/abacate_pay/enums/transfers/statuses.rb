@@ -21,6 +21,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid transfer status: #{value}" unless valid?(value)
+
           value
         end
       end

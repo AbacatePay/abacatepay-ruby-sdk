@@ -5,19 +5,19 @@ RSpec.describe AbacatePay::Resources::Checkouts do
     context "with API data" do
       let(:checkout) do
         described_class.new({
-          "id" => "chk-1",
-          "url" => "https://pay.abacatepay.com/chk-1",
-          "amount" => 5000,
-          "status" => "PAID",
-          "devMode" => true,
-          "methods" => ["PIX", "CARD"],
-          "frequency" => "ONE_TIME",
-          "externalId" => "ext-1",
-          "coupons" => ["SAVE10"],
-          "createdAt" => "2026-01-15T10:00:00Z",
-          "products" => [{ "externalId" => "prod-1", "name" => "Item", "price" => 5000 }],
-          "customer" => { "id" => "cust-1" }
-        })
+                              "id" => "chk-1",
+                              "url" => "https://pay.abacatepay.com/chk-1",
+                              "amount" => 5000,
+                              "status" => "PAID",
+                              "devMode" => true,
+                              "methods" => %w[PIX CARD],
+                              "frequency" => "ONE_TIME",
+                              "externalId" => "ext-1",
+                              "coupons" => ["SAVE10"],
+                              "createdAt" => "2026-01-15T10:00:00Z",
+                              "products" => [{ "externalId" => "prod-1", "name" => "Item", "price" => 5000 }],
+                              "customer" => { "id" => "cust-1" }
+                            })
       end
 
       it("sets id") { expect(checkout.id).to eq("chk-1") }
@@ -25,7 +25,7 @@ RSpec.describe AbacatePay::Resources::Checkouts do
       it("sets amount") { expect(checkout.amount).to eq(5000) }
       it("sets status enum") { expect(checkout.status).to eq("PAID") }
       it("sets dev_mode") { expect(checkout.dev_mode?).to be true }
-      it("sets methods array") { expect(checkout.methods).to eq(["PIX", "CARD"]) }
+      it("sets methods array") { expect(checkout.methods).to eq(%w[PIX CARD]) }
       it("sets frequency") { expect(checkout.frequency).to eq("ONE_TIME") }
       it("sets external_id") { expect(checkout.external_id).to eq("ext-1") }
       it("sets coupons") { expect(checkout.coupons).to eq(["SAVE10"]) }

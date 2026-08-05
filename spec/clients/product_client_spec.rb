@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/products/list") do
+      stubs.get("/v2/products/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "prod-1", "name" => "Test" }] }.to_json]
       end
@@ -30,7 +30,7 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
   describe "#get" do
     before do
-      stubs.get("/v1/products/get") do
+      stubs.get("/v2/products/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "prod-1", "name" => "Test Product" } }.to_json]
       end
@@ -47,7 +47,7 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/products/create") do
+      stubs.post("/v2/products/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "prod-new", "name" => "New Product" } }.to_json]
       end
@@ -55,8 +55,8 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
     it "returns a Products resource" do
       product = AbacatePay::Resources::Products.new({
-        "externalId" => "ext-1", "name" => "New Product", "price" => 1000
-      })
+                                                      "externalId" => "ext-1", "name" => "New Product", "price" => 1000
+                                                    })
       result = client.create(product)
       expect(result).to be_a(AbacatePay::Resources::Products)
       expect(result.id).to eq("prod-new")
@@ -65,7 +65,7 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
   describe "#delete" do
     before do
-      stubs.post("/v1/products/delete") do
+      stubs.post("/v2/products/delete") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "prod-1" } }.to_json]
       end
@@ -78,7 +78,7 @@ RSpec.describe AbacatePay::Clients::ProductClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/products/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/products/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

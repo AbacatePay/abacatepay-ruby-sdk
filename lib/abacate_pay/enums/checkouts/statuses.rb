@@ -20,6 +20,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid checkout status: #{value}" unless valid?(value)
+
           value
         end
       end

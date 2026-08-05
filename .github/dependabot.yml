@@ -1,0 +1,22 @@
+version: 2
+
+updates:
+  # A payments SDK inherits the vulnerabilities of everything it depends on.
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        patterns:
+          - "rubocop*"
+          - "rspec*"
+          - "simplecov*"
+          - "bundler-audit"
+
+  # Pinned actions go stale silently — v4 checkout was already deprecated here.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

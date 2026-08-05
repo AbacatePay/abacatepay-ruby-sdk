@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::PixClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/pix/list") do
+      stubs.get("/v2/pix/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "pix-1", "amount" => 1000, "status" => "COMPLETE" }] }.to_json]
       end
@@ -26,7 +26,7 @@ RSpec.describe AbacatePay::Clients::PixClient do
 
   describe "#get" do
     before do
-      stubs.get("/v1/pix/get") do
+      stubs.get("/v2/pix/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "pix-1", "amount" => 1000 } }.to_json]
       end
@@ -41,16 +41,15 @@ RSpec.describe AbacatePay::Clients::PixClient do
 
   describe "#send_pix" do
     before do
-      stubs.post("/v1/pix/send") do
+      stubs.post("/v2/pix/send") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "pix-new", "status" => "PENDING" } }.to_json]
       end
     end
 
     it "returns a PixTransfers resource" do
-      transfer = AbacatePay::Resources::PixTransfers.new({
-        "amount" => 500, "externalId" => "ext-1", "key" => "12345678900", "keyType" => "CPF"
-      })
+      attributes = { "amount" => 500, "externalId" => "ext-1", "key" => "12345678900", "keyType" => "CPF" }
+      transfer = AbacatePay::Resources::PixTransfers.new(attributes)
       result = client.send_pix(transfer)
       expect(result).to be_a(AbacatePay::Resources::PixTransfers)
       expect(result.id).to eq("pix-new")
@@ -59,7 +58,7 @@ RSpec.describe AbacatePay::Clients::PixClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/pix/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/pix/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

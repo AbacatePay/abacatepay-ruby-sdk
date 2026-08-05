@@ -21,6 +21,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid PIX key type: #{value}" unless valid?(value)
+
           value
         end
       end

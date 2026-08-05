@@ -32,7 +32,7 @@ module AbacatePay
         end
 
         parsed = JSON.parse(response.body)
-        raise ApiError, "API error: #{parsed['error']}" if parsed['error']
+        raise ApiError, "API error: #{parsed["error"]}" if parsed["error"]
 
         parsed.fetch("data")
       rescue Faraday::Error => e
@@ -46,16 +46,20 @@ module AbacatePay
       # @param uri [String] The endpoint URI
       # @return [Faraday::Connection] Configured Faraday client
       def build_client(uri)
-        base_url = if uri.empty?
-                     "#{AbacatePay.configuration.api_url}/"
-                   else
-                     "#{AbacatePay.configuration.api_url}/#{uri}/"
-                   end
+        configuration = AbacatePay.configuration!
+        base_url = uri.empty? ? "#{configuration.api_url}/" : "#{configuration.api_url}/#{uri}/"
+
         Faraday.new(
           url: base_url,
           headers: {
             "Content-Type" => "application/json",
-            "Authorization" => "Bearer #{AbacatePay.configuration.api_token}"
+            "Authorization" => "Bearer #{configuration.api_token}"
+          },
+          # Without an explicit timeout a hung gateway blocks the caller's
+          # thread indefinitely — inside a Rails request, that is an outage.
+          request: {
+            timeout: configuration.timeout,
+            open_timeout: configuration.timeout
           }
         )
       end
@@ -66,9 +70,9 @@ module AbacatePay
       # @raise [ApiError] With appropriate error message
       def handle_request_error(error)
         error_message = if error.response&.body
-          response_body = JSON.parse(error.response.body)
-          response_body["message"] || response_body["error"]
-        end
+                          response_body = JSON.parse(error.response.body)
+                          response_body["message"] || response_body["error"]
+                        end
 
         raise ApiError, "Request error: #{error_message || error.message}"
       end

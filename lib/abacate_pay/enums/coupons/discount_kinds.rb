@@ -17,6 +17,7 @@ module AbacatePay
 
         def self.validate!(value)
           raise ArgumentError, "Invalid discount kind: #{value}" unless valid?(value)
+
           value
         end
       end

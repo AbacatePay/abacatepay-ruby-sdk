@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a transparent PIX checkout in the AbacatePay system.
     class Transparents < Resource
       RESOURCE_PROPERTIES = {
         customer: "AbacatePay::Resources::Customers"

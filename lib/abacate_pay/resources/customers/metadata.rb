@@ -26,12 +26,6 @@ module AbacatePay
         def initialize(data)
           fill(data)
         end
-
-        protected
-
-        def to_hash
-          super
-        end
       end
     end
   end

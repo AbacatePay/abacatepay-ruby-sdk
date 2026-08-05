@@ -2,6 +2,7 @@
 
 module AbacatePay
   module Resources
+    # Represents a discount coupon in the AbacatePay system.
     class Coupons < Resource
       ENUM_PROPERTIES = {
         status: "AbacatePay::Enums::Coupons::Statuses",

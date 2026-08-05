@@ -2,6 +2,9 @@
 
 module AbacatePay
   module Clients
+    # Client for payouts (withdrawals) in the AbacatePay API.
+    #
+    # Payouts move settled balance out of the store account.
     class PayoutClient < Client
       URI = "payouts"
 
@@ -27,10 +30,10 @@ module AbacatePay
       # @return [Resources::Payouts]
       def create(data)
         response = request("POST", "create", json: {
-          amount: data.amount,
-          externalId: data.external_id,
-          description: data.description
-        })
+                             amount: data.amount,
+                             externalId: data.external_id,
+                             description: data.description
+                           })
         Resources::Payouts.new(response)
       end
     end

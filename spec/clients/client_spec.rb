@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Clients::Client do
   let(:stubs) { Faraday::Adapter::Test::Stubs.new }
   let(:faraday_client) do
-    Faraday.new(url: "https://api.abacatepay.com/v1/test/") do |f|
+    Faraday.new(url: "https://api.abacatepay.com/v2/test/") do |f|
       f.adapter :test, stubs
     end
   end
@@ -34,7 +34,7 @@ RSpec.describe AbacatePay::Clients::Client do
   describe "#request" do
     context "with a successful GET response" do
       before do
-        stubs.get("/v1/test/items") do
+        stubs.get("/v2/test/items") do
           [200, { "Content-Type" => "application/json" },
            { "data" => [{ "id" => "item-1" }] }.to_json]
         end
@@ -48,7 +48,7 @@ RSpec.describe AbacatePay::Clients::Client do
 
     context "with a successful POST response" do
       before do
-        stubs.post("/v1/test/create") do
+        stubs.post("/v2/test/create") do
           [200, { "Content-Type" => "application/json" },
            { "data" => { "id" => "new-item" } }.to_json]
         end
@@ -62,7 +62,7 @@ RSpec.describe AbacatePay::Clients::Client do
 
     context "when the response body has no 'data' key" do
       before do
-        stubs.get("/v1/test/bad") do
+        stubs.get("/v2/test/bad") do
           [200, { "Content-Type" => "application/json" }, { "error" => "something" }.to_json]
         end
       end
@@ -75,12 +75,46 @@ RSpec.describe AbacatePay::Clients::Client do
 
     context "when a Faraday connection error occurs" do
       before do
-        stubs.get("/v1/test/fail") { raise Faraday::ConnectionFailed.new("timeout") }
+        stubs.get("/v2/test/fail") { raise Faraday::ConnectionFailed.new("timeout") }
       end
 
       it "raises ApiError" do
         expect { client.call_request("GET", "fail") }
           .to raise_error(AbacatePay::ApiError)
+      end
+    end
+
+    # The most common production failure: the gateway rejects the request and
+    # explains why in the body. That explanation has to reach the caller.
+    context "when the API returns a structured error body" do
+      let(:failure) do
+        response = instance_double(Faraday::Response, body: { message: "Insufficient funds" }.to_json)
+        Faraday::BadRequestError.new("the server responded with status 400", response)
+      end
+
+      before do
+        stubs.get("/v2/test/denied") { raise failure }
+      end
+
+      it "surfaces the API message" do
+        expect { client.call_request("GET", "denied") }
+          .to raise_error(AbacatePay::ApiError, /Insufficient funds/)
+      end
+    end
+
+    context "when the API error body uses the 'error' key" do
+      let(:failure) do
+        response = instance_double(Faraday::Response, body: { error: "Invalid API key" }.to_json)
+        Faraday::UnauthorizedError.new("the server responded with status 401", response)
+      end
+
+      before do
+        stubs.get("/v2/test/unauthorized") { raise failure }
+      end
+
+      it "surfaces the API error" do
+        expect { client.call_request("GET", "unauthorized") }
+          .to raise_error(AbacatePay::ApiError, /Invalid API key/)
       end
     end
   end

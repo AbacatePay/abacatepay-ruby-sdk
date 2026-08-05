@@ -46,6 +46,7 @@ module AbacatePay
         # @raise [ArgumentError] if value is invalid
         def self.validate!(value)
           raise ArgumentError, "Invalid status: #{value}" unless valid?(value)
+
           value
         end
       end

@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Clients::BillingClient do
   let(:stubs) { Faraday::Adapter::Test::Stubs.new }
   let(:faraday_client) do
-    Faraday.new(url: "#{AbacatePay.configuration.api_url}/billing/") do |f|
+    Faraday.new(url: "#{AbacatePay.configuration.api_url}/billings/") do |f|
       f.adapter :test, stubs
     end
   end
@@ -20,7 +20,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
     end
 
     before do
-      stubs.get("/v1/billing/list") do
+      stubs.get("/v2/billings/list") do
         [200, { "Content-Type" => "application/json" }, { "data" => billing_data }.to_json]
       end
     end
@@ -34,9 +34,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
     end
 
     it "returns Billings resource instances" do
-      client.list.each do |billing|
-        expect(billing).to be_a(AbacatePay::Resources::Billings)
-      end
+      expect(client.list).to all(be_a(AbacatePay::Resources::Billings))
     end
 
     it "maps billing attributes correctly" do
@@ -49,7 +47,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
 
   describe "#list when the API returns an empty array" do
     before do
-      stubs.get("/v1/billing/list") do
+      stubs.get("/v2/billings/list") do
         [200, { "Content-Type" => "application/json" }, { "data" => [] }.to_json]
       end
     end
@@ -61,7 +59,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
 
   describe "#list when the API returns an error" do
     before do
-      stubs.get("/v1/billing/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/billings/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do
@@ -77,7 +75,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
     end
 
     before do
-      stubs.post("/v1/billing/create") do
+      stubs.post("/v2/billings/create") do
         [200, { "Content-Type" => "application/json" }, { "data" => response_data }.to_json]
       end
     end
@@ -133,7 +131,7 @@ RSpec.describe AbacatePay::Clients::BillingClient do
 
   describe "#create when the API returns an error" do
     before do
-      stubs.post("/v1/billing/create") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.post("/v2/billings/create") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

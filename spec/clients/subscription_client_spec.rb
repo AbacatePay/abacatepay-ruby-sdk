@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::SubscriptionClient do
 
   describe "#list" do
     before do
-      stubs.get("/v1/subscriptions/list") do
+      stubs.get("/v2/subscriptions/list") do
         [200, { "Content-Type" => "application/json" },
          { "data" => [{ "id" => "sub-1", "status" => "PAID" }] }.to_json]
       end
@@ -26,7 +26,7 @@ RSpec.describe AbacatePay::Clients::SubscriptionClient do
 
   describe "#create" do
     before do
-      stubs.post("/v1/subscriptions/create") do
+      stubs.post("/v2/subscriptions/create") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "sub-new" } }.to_json]
       end
@@ -36,11 +36,9 @@ RSpec.describe AbacatePay::Clients::SubscriptionClient do
       sub = AbacatePay::Resources::Subscriptions.new({ "methods" => ["PIX"] })
       customer = AbacatePay::Resources::Customers.new({ "id" => "cust-1" })
       sub.instance_variable_set(:@customer, customer)
-      sub.instance_variable_set(:@products, [
-        AbacatePay::Resources::Billings::Product.new({
-          "externalId" => "prod-1", "name" => "Monthly Plan", "price" => 2990, "quantity" => 1
-        })
-      ])
+      attributes = { "externalId" => "prod-1", "name" => "Monthly Plan", "price" => 2990, "quantity" => 1 }
+      product = AbacatePay::Resources::Billings::Product.new(attributes)
+      sub.instance_variable_set(:@products, [product])
 
       result = client.create(sub)
       expect(result).to be_a(AbacatePay::Resources::Subscriptions)
@@ -50,11 +48,24 @@ RSpec.describe AbacatePay::Clients::SubscriptionClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v1/subscriptions/list") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/subscriptions/list") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do
       expect { client.list }.to raise_error(AbacatePay::ApiError)
+    end
+  end
+
+  describe "#cancel" do
+    before do
+      stubs.post("/v2/subscriptions/cancel") do
+        [200, { "Content-Type" => "application/json" },
+         { "data" => { "id" => "subs-1", "status" => "CANCELLED" } }.to_json]
+      end
+    end
+
+    it "returns the cancelled subscription" do
+      expect(client.cancel("subs-1").status).to eq("CANCELLED")
     end
   end
 end

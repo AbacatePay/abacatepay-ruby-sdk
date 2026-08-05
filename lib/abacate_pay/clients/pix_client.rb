@@ -2,6 +2,10 @@
 
 module AbacatePay
   module Clients
+    # Client for outbound PIX transfers in the AbacatePay API.
+    #
+    # Transfers are sent to a PIX key; see Enums::Pix::KeyTypes for the
+    # accepted key formats.
     class PixClient < Client
       URI = "pix"
 
@@ -30,12 +34,12 @@ module AbacatePay
       # @return [Resources::PixTransfers]
       def send_pix(data)
         response = request("POST", "send", json: {
-          amount: data.amount,
-          externalId: data.external_id,
-          description: data.description,
-          key: data.key,
-          keyType: data.key_type
-        })
+                             amount: data.amount,
+                             externalId: data.external_id,
+                             description: data.description,
+                             key: data.key,
+                             keyType: data.key_type
+                           })
         Resources::PixTransfers.new(response)
       end
     end
