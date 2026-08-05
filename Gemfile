@@ -5,7 +5,7 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in abacatepay-ruby.gemspec
 gemspec
 
-gem "rake", "~> 13.0"
+gem "rake", "~> 13.4"
 
 # parallel is a transitive dependency of rubocop. The whole 2.x line requires
 # Ruby 3.3, which would make the dev toolchain uninstallable on the oldest Ruby
