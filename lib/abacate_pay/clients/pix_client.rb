@@ -13,7 +13,11 @@ module AbacatePay
         super(URI, client)
       end
 
-      # @param params [Hash] Optional pagination params (after, before, limit)
+      # The API requires an `id` on this endpoint: a bare call fails with
+      # "Expected property 'id' to be string but found: undefined". Despite the
+      # name it filters rather than lists.
+      #
+      # @param params [Hash] Params forwarded to the API; `id` is required
       # @return [Array<Resources::PixTransfers>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)
@@ -37,8 +41,12 @@ module AbacatePay
                              amount: data.amount,
                              externalId: data.external_id,
                              description: data.description,
-                             key: data.key,
-                             keyType: data.key_type
+                             # The API nests the destination under `pix`, with
+                             # `key` and `type`. Sending pixKey/pixKeyType at the
+                             # top level fails with "Property 'pix' is missing";
+                             # nesting the wrong names fails with
+                             # "Property 'pix.type' is missing".
+                             pix: { key: data.key, type: data.key_type }
                            })
         Resources::PixTransfers.new(response)
       end

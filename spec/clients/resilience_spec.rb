@@ -108,13 +108,24 @@ RSpec.describe "Request resilience" do
         .to raise_error(AbacatePay::ApiError, /Malformed API response/)
     end
 
-    it "raises ApiError when the envelope has no data field" do
+    # `webhooks/delete` answers {"success":true} with no data. Treating that as
+    # malformed turned a working call into an error.
+    # A list endpoint with no payload is an empty result, not an error.
+    it "returns an empty list when a successful response carries no data" do
       stubs.get("/v2/customers/list") do
         [200, { "Content-Type" => "application/json" }, { "success" => true }.to_json]
       end
 
+      expect(AbacatePay.customers.list).to eq([])
+    end
+
+    it "raises ApiError on an envelope that is neither data nor success" do
+      stubs.get("/v2/customers/list") do
+        [200, { "Content-Type" => "application/json" }, { "unexpected" => true }.to_json]
+      end
+
       expect { AbacatePay.customers.list }
-        .to raise_error(AbacatePay::ApiError, /missing the 'data' field/)
+        .to raise_error(AbacatePay::ApiError, /Unexpected API response/)
     end
   end
 

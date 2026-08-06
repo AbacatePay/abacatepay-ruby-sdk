@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 RSpec.describe AbacatePay::Resources::Resource do
+  # Unknown enum values pass through with a warning rather than raising, so a
+  # status AbacatePay adds later does not break parsing.
+  def silence_stderr
+    original = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = original
+  end
   # Concrete subclass used to exercise the base class methods
   let(:test_class) do
     Class.new(described_class) do
@@ -143,9 +155,14 @@ RSpec.describe AbacatePay::Resources::Resource do
       expect(instance.send(:initialize_enum, enum_class, "PAID")).to eq("PAID")
     end
 
-    it "raises ArgumentError for an invalid enum value" do
-      expect { instance.send(:initialize_enum, enum_class, "INVALID") }
-        .to raise_error(ArgumentError)
+    it "passes an unknown value through instead of raising" do
+      expect(silence_stderr { instance.send(:initialize_enum, enum_class, "INVALID") }).to be_a(String)
+    end
+
+    it "returns the value the API sent" do
+      result = nil
+      silence_stderr { result = instance.send(:initialize_enum, enum_class, "INVALID") }
+      expect(result).to eq("INVALID")
     end
   end
 

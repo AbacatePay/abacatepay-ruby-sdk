@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 RSpec.describe AbacatePay::Resources::Payouts do
+  # Unknown enum values pass through with a warning instead of raising, so the
+  # SDK does not break when AbacatePay introduces a value.
+  def silence_stderr
+    original = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = original
+  end
   describe "#initialize" do
     context "with API data" do
       let(:payout) do
@@ -21,10 +33,9 @@ RSpec.describe AbacatePay::Resources::Payouts do
       it("parses created_at") { expect(payout.created_at).to be_a(DateTime) }
     end
 
-    context "with invalid status" do
-      it "raises ArgumentError" do
-        expect { described_class.new({ "status" => "INVALID" }) }
-          .to raise_error(ArgumentError)
+    context "with a status the SDK does not know" do
+      it "passes it through instead of raising" do
+        expect { silence_stderr { described_class.new({ "status" => "INVALID" }) } }.not_to raise_error
       end
     end
 

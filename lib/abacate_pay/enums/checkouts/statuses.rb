@@ -10,8 +10,11 @@ module AbacatePay
         PAID = "PAID"
         REFUNDED = "REFUNDED"
 
+        # Reusable payment links are created ACTIVE rather than PENDING.
+        ACTIVE = "ACTIVE"
+
         def self.values
-          [PENDING, EXPIRED, CANCELLED, PAID, REFUNDED]
+          [PENDING, EXPIRED, CANCELLED, PAID, REFUNDED, ACTIVE]
         end
 
         def self.valid?(value)

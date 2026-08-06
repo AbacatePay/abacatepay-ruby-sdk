@@ -3,7 +3,7 @@
 RSpec.describe AbacatePay::Enums::Coupons::Statuses do
   describe ".values" do
     it "returns all valid statuses" do
-      expect(described_class.values).to contain_exactly("ACTIVE", "INACTIVE", "EXPIRED")
+      expect(described_class.values).to contain_exactly("ACTIVE", "INACTIVE", "EXPIRED", "DISABLED")
     end
   end
 

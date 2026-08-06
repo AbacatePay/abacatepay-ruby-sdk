@@ -46,7 +46,10 @@ module AbacatePay
       # @param id [String] Product ID
       # @return [Resources::Products]
       def delete(id)
-        response = request("POST", "delete", json: { id: id })
+        # The API reads the id from the query string on delete endpoints.
+        # Sending it only in the body fails with
+        # "Expected property 'id' to be string but found: undefined".
+        response = request("POST", "delete", params: { id: id }, json: {})
         Resources::Products.new(response)
       end
     end
