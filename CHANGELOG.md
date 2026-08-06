@@ -9,37 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.1] - 2026-08-06
 
-Every fix below was found by running the SDK against the live sandbox and a
-real Rails application, not against its own test suite.
-
-### Fixed
-
-- **`gem "abacatepay-ruby"` did not load the SDK.** Bundler requires a gem by
-  its own name, so Rails called `require "abacatepay-ruby"`, and the entry
-  point was `lib/abacate_pay.rb`. The require failed, but the gemspec had
-  already defined `AbacatePay` with nothing but `VERSION` in it, so the first
-  call raised `undefined method 'configure' for module AbacatePay` instead of a
-  missing-constant error. Every Rails user had to discover `require:
-  "abacate_pay"` on their own. There is now an entry point matching the gem
-  name.
-- **Customer responses dropped every field except the id.** The API returns
-  `name`, `email`, `cellphone` and `taxId` at the top level of the customer
-  object with an empty `metadata`; the resource only mapped a nested
-  `metadata`, so `customers.list` and `customers.get` returned objects with
-  nothing usable and `customer.metadata.name` was always nil. The fields are
-  exposed directly now, and `metadata` keeps answering for code written against
-  the previous interface.
-- **`AbacatePay.store.get` always failed.** The API serves this as
-  `stores/get`, plural. The singular path documented in the reference answers
-  HTTP 400.
-
-### Changed
-
-- The README no longer implies `has_more?` is always available. List responses
-  only carry pagination metadata when the API sends it; otherwise they are
-  plain Arrays, exactly as before.
-
-## [1.2.0] - 2026-08-05
+Inclui tudo o que estava previsto para a 1.2.0, que nunca chegou a ser
+publicada. Todas as correções abaixo foram encontradas exercitando o SDK
+contra o sandbox da AbacatePay e contra uma aplicação Rails real, e não contra
+a própria suíte de testes.
 
 ### Fixed
 
@@ -68,6 +41,25 @@ real Rails application, not against its own test suite.
   #6; the fix covers `products`, `coupons`, `payouts`, `pix` and
   `subscriptions`, which had the same defect.
 
+- **`gem "abacatepay-ruby"` did not load the SDK.** Bundler requires a gem by
+  its own name, so Rails called `require "abacatepay-ruby"`, and the entry
+  point was `lib/abacate_pay.rb`. The require failed, but the gemspec had
+  already defined `AbacatePay` with nothing but `VERSION` in it, so the first
+  call raised `undefined method 'configure' for module AbacatePay` instead of a
+  missing-constant error. Every Rails user had to discover `require:
+  "abacate_pay"` on their own. There is now an entry point matching the gem
+  name.
+- **Customer responses dropped every field except the id.** The API returns
+  `name`, `email`, `cellphone` and `taxId` at the top level of the customer
+  object with an empty `metadata`; the resource only mapped a nested
+  `metadata`, so `customers.list` and `customers.get` returned objects with
+  nothing usable and `customer.metadata.name` was always nil. The fields are
+  exposed directly now, and `metadata` keeps answering for code written against
+  the previous interface.
+- **`AbacatePay.store.get` always failed.** The API serves this as
+  `stores/get`, plural. The singular path documented in the reference answers
+  HTTP 400.
+
 ### Added
 
 - `AbacatePay::Webhooks::PUBLIC_KEY`, the fixed key AbacatePay signs with, now
@@ -77,6 +69,12 @@ real Rails application, not against its own test suite.
   `webhookSecret` query parameter, which is what actually authenticates the
   origin. The docs instruct using both mechanisms together; the SDK previously
   offered only the HMAC half.
+
+### Changed
+
+- The README no longer implies `has_more?` is always available. List responses
+  only carry pagination metadata when the API sends it; otherwise they are
+  plain Arrays, exactly as before.
 
 ## [1.1.0] - 2026-08-05
 
@@ -242,7 +240,6 @@ versions and will not change without a major bump.
 - Initial release
 
 [1.2.1]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.2.1
-[1.2.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.2.0
 [1.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.0.0
 [0.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v0.1.0
