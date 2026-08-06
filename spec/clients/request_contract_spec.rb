@@ -82,16 +82,18 @@ RSpec.describe "Client request contract" do
     end
   end
 
-  it "sends store requests to the un-prefixed store path" do
+  # The API serves this as `stores/get`, plural. The singular path documented
+  # in the reference answers HTTP 400.
+  it "sends store requests to the plural stores path" do
     requested = nil
-    stubs.get("/v2/store/get") do |env|
+    stubs.get("/v2/stores/get") do |env|
       requested = env.url.path
       json_response({ "id" => "store-1" })
     end
 
     AbacatePay.store.get
 
-    expect(requested).to eq("/v2/store/get")
+    expect(requested).to eq("/v2/stores/get")
   end
 
   # ── API base path ─────────────────────────────────────────────────────────

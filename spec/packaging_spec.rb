@@ -28,6 +28,14 @@ RSpec.describe "Gem packaging" do
     expect(packaged_files).to include("lib/abacate_pay.rb")
   end
 
+  # Bundler requires a gem by its own name, so `gem "abacatepay-ruby"` in a
+  # Gemfile makes Rails call `require "abacatepay-ruby"`. Without a file of that
+  # name the SDK never loads, and the first call fails with
+  # `undefined method 'configure' for module AbacatePay`.
+  it "ships an entry point matching the gem name" do
+    expect(packaged_files).to include("lib/abacatepay-ruby.rb")
+  end
+
   it "ships the README" do
     expect(packaged_files).to include("README.md")
   end

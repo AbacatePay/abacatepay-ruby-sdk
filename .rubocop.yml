@@ -120,8 +120,14 @@ RSpec/SpecFilePathFormat:
 
 # These specs deliberately cut across the whole library rather than describing
 # a single class.
+# The file name must match the gem name so Bundler's default require works.
+Naming/FileName:
+  Exclude:
+    - "lib/abacatepay-ruby.rb"
+
 RSpec/DescribeClass:
   Exclude:
+    - "spec/load_spec.rb"
     - "spec/clients/request_contract_spec.rb"
     - "spec/clients/pagination_spec.rb"
     - "spec/clients/resilience_spec.rb"
