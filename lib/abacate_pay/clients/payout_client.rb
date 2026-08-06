@@ -32,7 +32,13 @@ module AbacatePay
         response = request("POST", "create", json: {
                              amount: data.amount,
                              externalId: data.external_id,
-                             description: data.description
+                             description: data.description,
+                             # The API nests the destination under `pix`, with
+                             # `key` and `type`. Sending pixKey/pixKeyType at the
+                             # top level fails with "Property 'pix' is missing";
+                             # nesting the wrong names fails with
+                             # "Property 'pix.type' is missing".
+                             pix: { key: data.pix_key, type: data.pix_key_type }
                            })
         Resources::Payouts.new(response)
       end

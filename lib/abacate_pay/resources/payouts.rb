@@ -10,6 +10,12 @@ module AbacatePay
 
       DATETIME_PROPERTIES = %w[created_at updated_at].freeze
 
+      # @return [String, nil] Destination PIX key
+      attr_accessor :pix_key
+
+      # @return [String, nil] Destination PIX key type
+      attr_accessor :pix_key_type
+
       attr_reader :id, :amount, :external_id, :description,
                   :status, :created_at, :updated_at
 

@@ -13,6 +13,18 @@ Found by exercising all 39 public calls against the live sandbox.
 
 ### Fixed
 
+- **`customers.delete`, `products.delete` and `coupons.delete` always failed.**
+  Every delete endpoint reads the id from the query string; sending it only in
+  the body fails with "Expected property 'id' to be string but found:
+  undefined". Same defect as `webhook_endpoints.delete`.
+- **`pix.send_pix` and `payouts.create` always failed.** The API nests the
+  destination under `pix` as `{ key, type }`. The SDK sent `key`/`keyType` at
+  the top level, which fails with "Property 'pix' is missing". `Payouts` gained
+  `pix_key` and `pix_key_type`, without which a payout has no destination at
+  all.
+- **`subscriptions.create` always failed.** Line items take the product `id`,
+  the same shape checkouts use; the SDK sent `externalId`, which fails with
+  "Expected property 'items.0.id' to be string".
 - **Parsing a response could crash on a value the SDK did not know.**
   `initialize_enum` validated while reading API responses, so any status
   AbacatePay introduced turned into an `ArgumentError` inside `list` and `get`

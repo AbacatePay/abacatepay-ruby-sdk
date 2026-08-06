@@ -160,4 +160,98 @@ RSpec.describe "Live API conformance" do
       expect { AbacatePay::Resources::WebhookEndpoints.new(nil) }.not_to raise_error
     end
   end
+
+  # Every delete endpoint reads the id from the query string. Sending it only
+  # in the body fails with "Expected property 'id' to be string".
+  describe "delete endpoints" do
+    let(:stubs) { Faraday::Adapter::Test::Stubs.new }
+    let(:captured) { {} }
+
+    def client_for(resource, klass)
+      connection = Faraday.new(url: "#{AbacatePay.configuration.api_url}/#{resource}/") do |f|
+        f.adapter :test, stubs
+      end
+      klass.new(connection)
+    end
+
+    def stub_delete(resource)
+      stubs.post("/v2/#{resource}/delete") do |env|
+        captured[:id] = env.params["id"]
+        [200, { "Content-Type" => "application/json" }, { "data" => { "id" => "x" } }.to_json]
+      end
+    end
+
+    {
+      "customers" => AbacatePay::Clients::CustomerClient,
+      "products" => AbacatePay::Clients::ProductClient,
+      "coupons" => AbacatePay::Clients::CouponClient
+    }.each do |resource, klass|
+      it "sends the id in the query string for #{resource}" do
+        stub_delete(resource)
+
+        client_for(resource, klass).delete("abc_123")
+
+        expect(captured[:id]).to eq("abc_123")
+      end
+    end
+  end
+
+  # The destination is nested under `pix` with `key` and `type`. Top-level
+  # pixKey/pixKeyType fails with "Property 'pix' is missing", and nesting the
+  # wrong names fails with "Property 'pix.type' is missing".
+  describe "PIX destination payload" do
+    let(:stubs) { Faraday::Adapter::Test::Stubs.new }
+    let(:sent) { {} }
+
+    def capture(resource, path)
+      stubs.post("/v2/#{resource}/#{path}") do |env|
+        sent.replace(JSON.parse(env.request_body))
+        [200, { "Content-Type" => "application/json" }, { "data" => { "id" => "x" } }.to_json]
+      end
+    end
+
+    it "nests the key and type for a PIX transfer" do
+      capture("pix", "send")
+      connection = Faraday.new(url: "#{AbacatePay.configuration.api_url}/pix/") { |f| f.adapter :test, stubs }
+      AbacatePay::Clients::PixClient.new(connection).send_pix(
+        AbacatePay::Resources::PixTransfers.new(amount: 350, key: "1234", key_type: "CPF")
+      )
+
+      expect(sent["pix"]).to eq({ "key" => "1234", "type" => "CPF" })
+    end
+
+    it "nests the key and type for a payout" do
+      capture("payouts", "create")
+      connection = Faraday.new(url: "#{AbacatePay.configuration.api_url}/payouts/") { |f| f.adapter :test, stubs }
+      payout = AbacatePay::Resources::Payouts.new(amount: 350)
+      payout.pix_key = "1234"
+      payout.pix_key_type = "CPF"
+      AbacatePay::Clients::PayoutClient.new(connection).create(payout)
+
+      expect(sent["pix"]).to eq({ "key" => "1234", "type" => "CPF" })
+    end
+  end
+
+  # The API expects the product id, the same shape checkouts use. Sending
+  # externalId fails with "Expected property 'items.0.id' to be string".
+  describe "subscription line items" do
+    it "sends the product id" do
+      stubs = Faraday::Adapter::Test::Stubs.new
+      sent = {}
+      stubs.post("/v2/subscriptions/create") do |env|
+        sent.replace(JSON.parse(env.request_body))
+        [200, { "Content-Type" => "application/json" }, { "data" => { "id" => "subs_1" } }.to_json]
+      end
+      connection = Faraday.new(url: "#{AbacatePay.configuration.api_url}/subscriptions/") do |f|
+        f.adapter :test, stubs
+      end
+
+      subscription = AbacatePay::Resources::Subscriptions.new("methods" => ["PIX"])
+      product = AbacatePay::Resources::Billings::Product.new("externalId" => "prod_1", "quantity" => 2)
+      subscription.instance_variable_set(:@products, [product])
+      AbacatePay::Clients::SubscriptionClient.new(connection).create(subscription)
+
+      expect(sent["items"]).to eq([{ "id" => "prod_1", "quantity" => 2 }])
+    end
+  end
 end

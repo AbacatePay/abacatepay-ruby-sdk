@@ -26,15 +26,10 @@ module AbacatePay
           methods: data.methods,
           externalId: data.external_id,
           customerId: data.customer&.id,
-          items: data.products&.map do |product|
-            {
-              externalId: product.external_id,
-              name: product.name,
-              description: product.description,
-              quantity: product.quantity,
-              price: product.price
-            }
-          end
+          # The API expects the product id here, the same shape checkouts use.
+          # Sending externalId fails with
+          # "Expected property 'items.0.id' to be string".
+          items: data.products&.map { |product| { id: product.external_id, quantity: product.quantity } }
         }
 
         response = request("POST", "create", json: request_data)

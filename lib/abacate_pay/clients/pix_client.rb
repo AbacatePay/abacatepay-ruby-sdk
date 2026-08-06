@@ -41,8 +41,12 @@ module AbacatePay
                              amount: data.amount,
                              externalId: data.external_id,
                              description: data.description,
-                             key: data.key,
-                             keyType: data.key_type
+                             # The API nests the destination under `pix`, with
+                             # `key` and `type`. Sending pixKey/pixKeyType at the
+                             # top level fails with "Property 'pix' is missing";
+                             # nesting the wrong names fails with
+                             # "Property 'pix.type' is missing".
+                             pix: { key: data.key, type: data.key_type }
                            })
         Resources::PixTransfers.new(response)
       end
