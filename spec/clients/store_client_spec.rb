@@ -11,7 +11,7 @@ RSpec.describe AbacatePay::Clients::StoreClient do
 
   describe "#get" do
     before do
-      stubs.get("/v2/store/get") do
+      stubs.get("/v2/stores/get") do
         [200, { "Content-Type" => "application/json" },
          { "data" => { "id" => "store-1", "name" => "My Store",
                        "balance" => { "available" => 10_000, "pending" => 500, "blocked" => 0 } } }.to_json]
@@ -78,7 +78,7 @@ RSpec.describe AbacatePay::Clients::StoreClient do
 
   describe "when the API returns an error" do
     before do
-      stubs.get("/v2/store/get") { raise Faraday::ConnectionFailed.new("timeout") }
+      stubs.get("/v2/stores/get") { raise Faraday::ConnectionFailed.new("timeout") }
     end
 
     it "raises ApiError" do

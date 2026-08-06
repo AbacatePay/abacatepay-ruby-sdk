@@ -70,4 +70,61 @@ RSpec.describe AbacatePay::Resources::Customers do
       expect(customer.metadata).to be_nil
     end
   end
+
+  # The API returns the customer fields at the top level of the object, with an
+  # empty `metadata`. Mapping only the nested shape dropped name, email,
+  # cellphone and taxId from every response.
+  describe "the shape the API actually returns" do
+    subject(:customer) do
+      described_class.new(
+        "id" => "cust_1", "name" => "Ana", "email" => "ana@example.com",
+        "cellphone" => "11999998888", "taxId" => "111.444.777-35",
+        "metadata" => {}, "devMode" => true
+      )
+    end
+
+    it "exposes the name" do
+      expect(customer.name).to eq("Ana")
+    end
+
+    it "exposes the email" do
+      expect(customer.email).to eq("ana@example.com")
+    end
+
+    it "exposes the cellphone" do
+      expect(customer.cellphone).to eq("11999998888")
+    end
+
+    it "exposes the tax id" do
+      expect(customer.tax_id).to eq("111.444.777-35")
+    end
+
+    it "reports dev mode" do
+      expect(customer.dev_mode?).to be true
+    end
+
+    # `customer.metadata.name` is what the README documented, so it has to keep
+    # answering even though the API sends the fields flat.
+    it "still answers through metadata" do
+      expect(customer.metadata.name).to eq("Ana")
+    end
+
+    it "exposes the email through metadata too" do
+      expect(customer.metadata.email).to eq("ana@example.com")
+    end
+  end
+
+  describe "the nested shape older code builds" do
+    subject(:customer) do
+      described_class.new("id" => "cust_2", "metadata" => { "name" => "Nested", "email" => "n@e.com" })
+    end
+
+    it "keeps reading metadata" do
+      expect(customer.metadata.name).to eq("Nested")
+    end
+
+    it "does not invent a top-level value" do
+      expect(customer.name).to be_nil
+    end
+  end
 end

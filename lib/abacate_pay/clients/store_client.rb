@@ -12,7 +12,9 @@ module AbacatePay
 
       # @return [Resources::Store]
       def get
-        response = request("GET", "store/get")
+        # The API serves this as `stores/get`, plural, even though the reference
+        # documents `store/get`. The singular path answers HTTP 400.
+        response = request("GET", "stores/get")
         Resources::Store.new(response)
       end
 

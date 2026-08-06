@@ -103,19 +103,28 @@ AbacatePay.checkouts.list(status: 'PAID', email: 'user@example.com')
 
 <div align="center">
 
-Listas retornam no máximo 100 itens. O resultado é uma `Collection`, que funciona como Array e ainda carrega o cursor:
+Listas retornam no máximo 100 itens.
 
 </div>
 
 ```ruby
 page = AbacatePay.customers.list
 page.first.id     # funciona como Array
-page.has_more?    # => true
-page.next_cursor  # => "cust_abc123"
 
 # Para percorrer tudo sem lidar com cursor:
 AbacatePay.customers.auto_paging_each { |customer| puts customer.id }
-AbacatePay.customers.each_page { |page| puts page.size }
+```
+
+<div align="center">
+
+Quando a API envia metadados de paginação, o resultado é uma `Collection` que carrega o cursor. Quando não envia, é um Array puro, então cheque antes de usar:
+
+</div>
+
+```ruby
+if page.respond_to?(:has_more?) && page.has_more?
+  proxima = AbacatePay.customers.list(after: page.next_cursor)
+end
 ```
 
 <div align="center">
