@@ -21,16 +21,28 @@ module AbacatePay
         raise ArgumentError, "Invalid datetime value: #{value}"
       end
 
-      # Initialize an enum from a string or enum object
+      # Initialize an enum from a string or enum object.
+      #
+      # Unknown values pass through with a warning rather than raising. This
+      # method runs while parsing API responses, and AbacatePay adds statuses
+      # over time: rejecting an unrecognised one would turn every new value
+      # into a crash inside `list` and `get` for every integration at once.
+      # That happened with the coupon status `DISABLED` and the payment-link
+      # status `ACTIVE`, neither of which the SDK knew about.
+      #
+      # Use {AbacatePay::Enums} `validate!` directly when you want a hard
+      # failure on a value you are about to send.
       #
       # @param enum_class [Class] The enum class to initialize
       # @param value [String, Object] The value to initialize
-      # @return [Object, nil] The initialized enum or nil
-      # @raise [ArgumentError] If the value is invalid
+      # @return [Object, nil] The value, validated when known
       def initialize_enum(enum_class, value)
         return nil if value.nil? || value.empty?
+        return value if enum_class.valid?(value)
 
-        enum_class.validate!(value)
+        warn "[AbacatePay] unknown #{enum_class.name.split("::").last} value #{value.inspect}. " \
+             "Passing it through; upgrade the gem if this is a new API value."
+        value
       end
 
       # Initialize a resource from a hash or resource object
@@ -66,6 +78,10 @@ module AbacatePay
       # @param data [Hash] The data to fill with
       # @return [void]
       def fill(data)
+        # Some endpoints answer a successful call with no payload, so the
+        # resource is built from nil. An empty object beats a NoMethodError.
+        return if data.nil?
+
         data.each do |key, value|
           property = camel_to_snake(key)
           next unless respond_to?("#{property}=", true)

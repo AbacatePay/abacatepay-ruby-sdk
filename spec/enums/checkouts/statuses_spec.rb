@@ -4,7 +4,7 @@ RSpec.describe AbacatePay::Enums::Checkouts::Statuses do
   describe ".values" do
     it "returns all valid statuses" do
       expect(described_class.values).to contain_exactly(
-        "PENDING", "EXPIRED", "CANCELLED", "PAID", "REFUNDED"
+        "PENDING", "EXPIRED", "CANCELLED", "PAID", "REFUNDED", "ACTIVE"
       )
     end
   end

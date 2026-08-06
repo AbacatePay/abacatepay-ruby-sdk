@@ -83,16 +83,33 @@ module AbacatePay
         parsed = JSON.parse(response.body)
         raise ApiError, "API error: #{parsed["error"]}" if parsed["error"]
 
-        data = parsed.fetch("data")
-        # Preserve the cursor when the API sends one; dropping it made paging
-        # past the first 100 records impossible.
-        parsed["pagination"] ? Collection.new(data, parsed["pagination"]) : data
+        extract_data(parsed)
       rescue Faraday::Error => e
         handle_request_error(e)
       rescue JSON::ParserError => e
         raise ApiError, "Malformed API response: #{e.message}"
-      rescue KeyError
-        raise ApiError, "API response is missing the 'data' field"
+      end
+
+      # Pulls the payload out of the `{data, error, success}` envelope.
+      #
+      # Some endpoints answer a successful call with no `data` at all, for
+      # example `webhooks/delete` returning `{"success":true,"error":null}`.
+      # Treating that as malformed turned a working call into an ApiError.
+      #
+      # @param parsed [Hash] The decoded response body
+      # @return [Object, nil] The payload, or nil when the call carries none
+      # @raise [ApiError] if the envelope has neither data nor a success flag
+      def extract_data(parsed)
+        unless parsed.key?("data")
+          return nil if parsed["success"]
+
+          raise ApiError, "Unexpected API response: #{parsed.inspect[0, 120]}"
+        end
+
+        data = parsed["data"]
+        # Preserve the cursor when the API sends one; dropping it made paging
+        # past the first 100 records impossible.
+        parsed["pagination"] ? Collection.new(data, parsed["pagination"]) : data
       end
 
       # Issues the HTTP call.

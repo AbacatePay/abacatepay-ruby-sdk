@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 RSpec.describe AbacatePay::Resources::Billings do
+  # Unknown enum values pass through with a warning instead of raising, so the
+  # SDK does not break when AbacatePay introduces a value.
+  def silence_stderr
+    original = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = original
+  end
   # ── flat attributes ───────────────────────────────────────────────────────────
 
   describe "#initialize with flat attributes" do
@@ -72,19 +84,18 @@ RSpec.describe AbacatePay::Resources::Billings do
       expect(billing.methods).to eq(["PIX"])
     end
 
-    it "raises ArgumentError for an invalid frequency" do
-      expect { described_class.new("frequency" => "YEARLY") }
-        .to raise_error(ArgumentError)
+    # Unknown values pass through with a warning: rejecting them would break
+    # parsing every time AbacatePay introduces a value.
+    it "passes an unknown frequency through" do
+      expect { silence_stderr { described_class.new("frequency" => "YEARLY") } }.not_to raise_error
     end
 
-    it "raises ArgumentError for an invalid status" do
-      expect { described_class.new("status" => "UNKNOWN") }
-        .to raise_error(ArgumentError)
+    it "passes an unknown status through" do
+      expect { silence_stderr { described_class.new("status" => "UNKNOWN") } }.not_to raise_error
     end
 
-    it "raises ArgumentError for an invalid payment method" do
-      expect { described_class.new("methods" => ["CASH"]) }
-        .to raise_error(ArgumentError)
+    it "passes an unknown payment method through" do
+      expect { silence_stderr { described_class.new("methods" => ["CASH"]) } }.not_to raise_error
     end
   end
 

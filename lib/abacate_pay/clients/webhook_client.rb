@@ -11,6 +11,9 @@ module AbacatePay
     class WebhookClient < Client
       URI = "webhooks"
 
+      # Shortest signing secret the API accepts.
+      MINIMUM_SECRET_LENGTH = 32
+
       # @param client [Faraday::Connection, nil] Optional Faraday client
       def initialize(client = nil)
         super(URI, client)
@@ -40,10 +43,18 @@ module AbacatePay
       # @param secret [String] Signing secret
       # @param events [Array<String>] Event types to subscribe to
       # @return [Resources::WebhookEndpoints] The created webhook
-      # @raise [ArgumentError] if the endpoint is not an HTTPS URL
+      # @raise [ArgumentError] if the endpoint is not HTTPS, the event list is
+      #   empty, or the secret is shorter than the API accepts
       def create(name:, endpoint:, secret:, events:)
         raise ArgumentError, "endpoint must be an HTTPS URL, got #{endpoint.inspect}" unless https_url?(endpoint)
         raise ArgumentError, "events must not be empty" if Array(events).empty?
+
+        # The API rejects anything shorter with
+        # "Expected string length greater or equal to 32".
+        if secret.to_s.length < MINIMUM_SECRET_LENGTH
+          raise ArgumentError,
+                "secret must be at least #{MINIMUM_SECRET_LENGTH} characters, got #{secret.to_s.length}"
+        end
 
         response = request("POST", "create", json: {
                              name: name,
@@ -55,9 +66,15 @@ module AbacatePay
       end
 
       # @param id [String] The webhook ID
-      # @return [Resources::WebhookEndpoints] The deleted webhook
+      # @return [Resources::WebhookEndpoints, nil] The deleted webhook, or nil
+      #   when the API confirms the deletion without echoing the object
       def delete(id)
-        response = request("POST", "delete", json: { id: id })
+        # The API reads the id from the query string here, like
+        # transparents/simulate-payment. Sending it in the body fails with
+        # "Expected property 'id' to be string but found: undefined".
+        response = request("POST", "delete", params: { id: id }, json: {})
+        return nil if response.nil?
+
         Resources::WebhookEndpoints.new(response)
       end
 

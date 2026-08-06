@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
+require "stringio"
+
 RSpec.describe AbacatePay::Resources::Products do
+  # Unknown enum values pass through with a warning instead of raising, so the
+  # SDK does not break when AbacatePay introduces a value.
+  def silence_stderr
+    original = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = original
+  end
   describe "#initialize" do
     context "with API data" do
       let(:product) do
@@ -40,10 +52,9 @@ RSpec.describe AbacatePay::Resources::Products do
       end
     end
 
-    context "with invalid cycle" do
-      it "raises ArgumentError" do
-        expect { described_class.new({ "cycle" => "DAILY" }) }
-          .to raise_error(ArgumentError)
+    context "with a cycle the SDK does not know" do
+      it "passes it through instead of raising" do
+        expect { silence_stderr { described_class.new({ "cycle" => "DAILY" }) } }.not_to raise_error
       end
     end
   end

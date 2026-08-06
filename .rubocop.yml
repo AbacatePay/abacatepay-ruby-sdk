@@ -134,6 +134,7 @@ RSpec/DescribeClass:
     - "spec/clients/logging_spec.rb"
     - "spec/clients/boleto_spec.rb"
     - "spec/packaging_spec.rb"
+    - "spec/api_conformance_spec.rb"
 
 # `has_more?` mirrors the API's own `hasMore` field and matches the convention
 # other payment SDKs use for cursor pagination. `more?` would read as a

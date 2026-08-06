@@ -60,19 +60,19 @@ RSpec.describe AbacatePay::Clients::WebhookClient do
 
     it "returns the created webhook" do
       result = client.create(name: "Payments", endpoint: "https://site.com/hook",
-                             secret: "s3cr3t", events: ["checkout.completed"])
+                             secret: "s" * 32, events: ["checkout.completed"])
       expect(result.id).to eq("wh-new")
     end
 
     it "sends every required field" do
       client.create(name: "Payments", endpoint: "https://site.com/hook",
-                    secret: "s3cr3t", events: ["checkout.completed"])
+                    secret: "s" * 32, events: ["checkout.completed"])
       expect(sent_body.keys).to contain_exactly("name", "endpoint", "secret", "events")
     end
 
     it "wraps a single event into an array" do
       client.create(name: "P", endpoint: "https://site.com/hook",
-                    secret: "s", events: "checkout.completed")
+                    secret: "s" * 32, events: "checkout.completed")
       expect(sent_body["events"]).to eq(["checkout.completed"])
     end
 
@@ -80,19 +80,19 @@ RSpec.describe AbacatePay::Clients::WebhookClient do
     # rejection after the round trip.
     it "rejects a plain HTTP endpoint" do
       expect do
-        client.create(name: "P", endpoint: "http://site.com/hook", secret: "s", events: ["a"])
+        client.create(name: "P", endpoint: "http://site.com/hook", secret: "s" * 32, events: ["a"])
       end.to raise_error(ArgumentError, /HTTPS/)
     end
 
     it "rejects a malformed endpoint" do
       expect do
-        client.create(name: "P", endpoint: "not a url", secret: "s", events: ["a"])
+        client.create(name: "P", endpoint: "not a url", secret: "s" * 32, events: ["a"])
       end.to raise_error(ArgumentError, /HTTPS/)
     end
 
     it "rejects an empty event list" do
       expect do
-        client.create(name: "P", endpoint: "https://site.com/hook", secret: "s", events: [])
+        client.create(name: "P", endpoint: "https://site.com/hook", secret: "s" * 32, events: [])
       end.to raise_error(ArgumentError, /events must not be empty/)
     end
   end

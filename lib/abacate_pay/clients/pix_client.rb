@@ -13,7 +13,11 @@ module AbacatePay
         super(URI, client)
       end
 
-      # @param params [Hash] Optional pagination params (after, before, limit)
+      # The API requires an `id` on this endpoint: a bare call fails with
+      # "Expected property 'id' to be string but found: undefined". Despite the
+      # name it filters rather than lists.
+      #
+      # @param params [Hash] Params forwarded to the API; `id` is required
       # @return [Array<Resources::PixTransfers>]
       def list(**params)
         response = request("GET", "list", params: params.empty? ? nil : params)

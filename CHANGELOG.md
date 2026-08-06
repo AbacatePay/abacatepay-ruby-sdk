@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-06
+
+Found by exercising all 39 public calls against the live sandbox.
+
+### Fixed
+
+- **Parsing a response could crash on a value the SDK did not know.**
+  `initialize_enum` validated while reading API responses, so any status
+  AbacatePay introduced turned into an `ArgumentError` inside `list` and `get`
+  for every integration at once. It happened with the coupon status `DISABLED`
+  and the payment-link status `ACTIVE`, which made `coupons.toggle` and
+  `payment_links.create` fail outright. Unknown values now pass through with a
+  warning; use the enum's `validate!` when you want a hard failure on a value
+  you are about to send.
+- **`Coupons#code` and `#current_redeems` were always nil.** The API uses the
+  coupon code as the object's `id` and sends the counter as `redeemsCount`.
+  Adds `redeems_count`, `notes` and `dev_mode?`; `code` falls back to the id
+  and `current_redeems` keeps answering.
+- **`webhook_endpoints.delete` always failed.** The API reads the id from the
+  query string on that endpoint, and answers `{"success":true,"error":null}`
+  with no `data` key, which the SDK then rejected as malformed. A successful
+  response carrying no payload is no longer an error.
+- Building a resource from an empty payload raised `NoMethodError`.
+
+### Added
+
+- `webhook_endpoints.create` refuses a secret shorter than 32 characters
+  locally, which is what the API requires.
+- `pix.list` documents that the API requires an `id`; despite the name it
+  filters rather than lists.
+
+### Changed
+
+- The coupon and checkout status enums gained `DISABLED` and `ACTIVE`.
+
 ## [1.2.1] - 2026-08-06
 
 Inclui tudo o que estava previsto para a 1.2.0, que nunca chegou a ser
@@ -239,6 +274,7 @@ versions and will not change without a major bump.
 
 - Initial release
 
+[1.2.2]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.2.2
 [1.2.1]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.2.1
 [1.1.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.1.0
 [1.0.0]: https://github.com/AbacatePay/abacatepay-ruby-sdk/releases/tag/v1.0.0
