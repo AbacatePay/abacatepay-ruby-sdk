@@ -4,6 +4,10 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  # Lets a run be retriggered without pushing a commit. A GitHub Actions
+  # outage left a run stuck in `queued` that could neither be cancelled nor
+  # rerun, and there was no way to get a fresh one on main.
+  workflow_dispatch:
 
 # A newer push to the same branch makes the in-flight run irrelevant.
 concurrency:
