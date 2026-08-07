@@ -1,12 +1,15 @@
 <div align="center">
 
-# AbacatePay Ruby SDK
+# 🥑 AbacatePay Ruby SDK
 
-SDK oficial da **AbacatePay** para integrar pagamentos via **PIX** de forma simples, segura e idiomática em Ruby.
+SDK oficial da **AbacatePay** para integrar pagamentos via **PIX**, **cartão** e **boleto** de forma simples, segura e idiomática em Ruby.
+
+[![Gem](https://img.shields.io/gem/v/abacatepay-ruby?color=e94822&label=gem)](https://rubygems.org/gems/abacatepay-ruby)
+[![CI](https://github.com/AbacatePay/abacatepay-ruby-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/AbacatePay/abacatepay-ruby-sdk/actions/workflows/ci.yml)
+[![Ruby](https://img.shields.io/badge/ruby-%3E%3D%203.2-CC342D)](https://www.ruby-lang.org)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
 
 O [`abacatepay-ruby`](https://rubygems.org/gems/abacatepay-ruby) é um **wrapper versionado de alto nível** sobre a API da AbacatePay, focado em **DX**, **verificação segura de webhooks** e **erros tipados**.
-
-<img src="https://res.cloudinary.com/dkok1obj5/image/upload/v1767631413/avo_clhmaf.png" width="100%" alt="AbacatePay Open Source"/>
 
 Funciona em qualquer aplicação Ruby: Rails, Sinatra, Hanami ou Ruby puro.
 
